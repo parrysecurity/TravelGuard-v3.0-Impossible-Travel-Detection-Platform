@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TravelGuard v2.0 — Security Platform</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="backend-integration.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#F5F4F1;--surf:#FFFFFF;--surf2:#F0EEE9;--surf3:#E8E6E0;
+--bdr:#DDD9D0;--bdr2:#C8C4BA;
+--tx:#18170F;--tx2:#6B6860;--tx3:#9E9C96;
+--red:#C0392B;--red-l:#FDF2F0;--red-m:#FAD5D0;
+--ora:#D4550A;--ora-l:#FEF0E8;
+--amb:#B45309;--amb-l:#FEF9EC;--amb-m:#FDE68A;
+--grn:#166534;--grn-l:#F0FDF4;--grn-m:#BBF7D0;
+--blu:#1D4ED8;--blu-l:#EFF6FF;--blu-m:#BFDBFE;
+--pur:#6D28D9;--pur-l:#F5F3FF;--pur-m:#DDD6FE;
+--r4:4px;--r8:8px;--r12:12px;--r16:16px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);font-size:13px;line-height:1.5;min-height:600px}
+.app{display:flex;height:100vh;min-height:600px;overflow:hidden}
+.sb{width:220px;flex-shrink:0;background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow-y:auto}
+.sb-logo{padding:16px 16px 12px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px}
+.sb-icon{width:32px;height:32px;background:#18170F;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sb-name{font-size:13px;font-weight:700;color:var(--tx);letter-spacing:-.01em}
+.sb-ver{font-size:10px;color:var(--tx3);margin-top:1px}
+.sb-sec{padding:12px 16px 4px;font-size:10px;font-weight:600;color:var(--tx3);letter-spacing:.07em;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;color:var(--tx2);font-size:12px;font-weight:500;border-left:2px solid transparent;transition:all .12s}
+.sb-item:hover{background:var(--surf2);color:var(--tx)}
+.sb-item.on{background:#18170F08;color:var(--tx);border-left-color:var(--tx);font-weight:600}
+.sb-item .ico{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:20px;padding:1px 6px;font-size:10px;font-weight:700;min-width:18px;text-align:center}
+.sb-badge.grn{background:var(--grn)}
+.sb-badge.amb{background:var(--amb)}
+.sb-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--bdr)}
+.sb-thr{background:var(--surf2);border-radius:var(--r8);padding:10px 12px;margin-bottom:10px;border:1px solid var(--bdr)}
+.sb-thr-lbl{font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.sb-thr-val{font-size:18px;font-weight:700;color:var(--red)}
+.sb-thr-val span{font-size:11px;font-weight:400;color:var(--tx3)}
+input[type=range]{width:100%;accent-color:var(--tx);height:3px;margin:5px 0}
+.status-pill{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--grn-l);border-radius:var(--r8);border:1px solid var(--grn-m)}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{background:var(--surf);border-bottom:1px solid var(--bdr);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.tb-title{font-size:15px;font-weight:700;color:var(--tx)}
+.tb-sub{font-size:11px;color:var(--tx3);margin-top:1px}
+.tb-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.srch{display:flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r8);padding:6px 10px}
+.srch input{border:none;background:transparent;font-size:12px;color:var(--tx);outline:none;width:160px}
+.srch input::placeholder{color:var(--tx3)}
+.btn{padding:6px 12px;border-radius:var(--r8);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bdr);transition:all .12s;font-family:inherit}
+.btn-ghost{background:transparent;color:var(--tx2)}
+.btn-ghost:hover{background:var(--surf2)}
+.btn-dark{background:var(--tx);color:#fff;border-color:var(--tx)}
+.btn-dark:hover{background:#2d2c22}
+.btn-red{background:var(--red-l);color:var(--red);border-color:var(--red-m)}
+.btn-grn{background:var(--grn-l);color:var(--grn);border-color:var(--grn-m)}
+.btn-blu{background:var(--blu-l);color:var(--blu);border-color:var(--blu-m)}
+.btn-amb{background:var(--amb-l);color:var(--amb);border-color:var(--amb-m)}
+.btn-sm{padding:4px 8px;font-size:11px;border-radius:var(--r4)}
+.content{flex:1;overflow-y:auto;padding:20px}
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12)}
+.card-hd{padding:14px 18px 10px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px}
+.card-hd-title{font-size:13px;font-weight:700;color:var(--tx)}
+.card-hd-sub{font-size:11px;color:var(--tx3);margin-left:auto}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.mc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px 16px;cursor:pointer;transition:all .12s}
+.mc:hover{border-color:var(--bdr2)}
+.mc-lbl{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.mc-val{font-size:26px;font-weight:800;color:var(--tx);line-height:1;letter-spacing:-.02em}
+.mc-sub{font-size:11px;color:var(--tx3);margin-top:4px}
+.mc-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 6px;border-radius:20px;margin-top:5px}
+.chip-red{background:var(--red-l);color:var(--red)}
+.chip-grn{background:var(--grn-l);color:var(--grn)}
+.chip-amb{background:var(--amb-l);color:var(--amb)}
+.chip-blu{background:var(--blu-l);color:var(--blu)}
+.chip-pur{background:var(--pur-l);color:var(--pur)}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.02em}
+.b-red{background:var(--red-l);color:var(--red)}
+.b-amb{background:var(--amb-l);color:var(--amb)}
+.b-grn{background:var(--grn-l);color:var(--grn)}
+.b-blu{background:var(--blu-l);color:var(--blu)}
+.b-pur{background:var(--pur-l);color:var(--pur)}
+.b-gray{background:var(--surf2);color:var(--tx2)}
+.feed-item{display:flex;align-items:flex-start;gap:10px;padding:10px 18px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .1s}
+.feed-item:hover{background:var(--surf2)}
+.feed-item:last-child{border-bottom:none}
+.feed-item.sus{border-left:3px solid var(--red)}
+.feed-item.ok{border-left:3px solid transparent}
+.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.fdot-r{background:var(--red)}
+.fdot-g{background:var(--grn)}
+.fi-user{font-size:12px;font-weight:600;color:var(--tx)}
+.fi-det{font-size:11px;color:var(--tx2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.fi-time{font-size:10px;color:var(--tx3);margin-left:auto;flex-shrink:0}
+.alrt-toolbar{display:flex;align-items:center;gap:8px;padding:12px 18px;border-bottom:1px solid var(--bdr);flex-wrap:wrap}
+.alrt-filters{display:flex;gap:4px}
+.flt-btn{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--bdr);background:transparent;color:var(--tx2);transition:all .12s;font-family:inherit}
+.flt-btn.on{background:var(--tx);color:#fff;border-color:var(--tx)}
+.alrt-search{display:flex;align-items:center;gap:5px;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r8);padding:5px 9px;margin-left:auto}
+.alrt-search input{border:none;background:transparent;font-size:11px;color:var(--tx);outline:none;width:140px}
+.alrt-search input::placeholder{color:var(--tx3)}
+.alrt-sort{padding:4px 8px;border-radius:var(--r4);font-size:11px;border:1px solid var(--bdr);background:transparent;color:var(--tx2);cursor:pointer;font-family:inherit}
+.atbl{width:100%;border-collapse:collapse;font-size:12px}
+.atbl thead tr{background:var(--surf2)}
+.atbl th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr);white-space:nowrap;cursor:pointer;user-select:none}
+.atbl th:hover{color:var(--tx)}
+.atbl td{padding:0;border-bottom:1px solid var(--bdr)}
+.atbl tbody tr{cursor:pointer;transition:background .1s}
+.atbl tbody tr:hover{background:var(--surf2)}
+.atbl tbody tr.sel{background:#18170F06;outline:1px solid var(--bdr2)}
+.atbl tbody tr:last-child td{border-bottom:none}
+.atbl-cell{padding:10px 14px;display:flex;align-items:center;gap:7px}
+.sev-bar{width:3px;height:36px;border-radius:2px;flex-shrink:0}
+.detail-panel{background:var(--surf);border-top:1px solid var(--bdr);padding:0}
+.dp-header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--bdr)}
+.dp-close{margin-left:auto;padding:4px 8px;border-radius:var(--r4);border:1px solid var(--bdr);background:transparent;cursor:pointer;font-size:12px;color:var(--tx3)}
+.dp-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--bdr)}
+.dp-section{padding:14px 18px;border-right:1px solid var(--bdr)}
+.dp-section:last-child{border-right:none}
+.dp-sec-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.dp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.dp-row:last-child{margin-bottom:0}
+.dp-key{font-size:11px;color:var(--tx3)}
+.dp-val{font-size:11px;font-weight:600;color:var(--tx);text-align:right}
+.dp-actions{display:flex;gap:8px;padding:12px 18px}
+.speed-meter{margin-top:8px}
+.speed-track{height:6px;background:var(--surf2);border-radius:3px;overflow:hidden;border:1px solid var(--bdr)}
+.speed-fill{height:100%;border-radius:3px;transition:width .4s}
+.speed-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);margin-top:2px}
+.uav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.uav-sm{width:22px;height:22px;font-size:9px}
+.chart-wrap{padding:14px 18px;position:relative}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;color:var(--tx3);font-size:12px;gap:8px;text-align:center}
+.toasts{position:absolute;bottom:16px;right:16px;z-index:999;display:flex;flex-direction:column;gap:6px;pointer-events:none;width:280px}
+.toast{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 12px;pointer-events:all;animation:tIn .25s ease}
+.toast-t{font-size:12px;font-weight:600;color:var(--tx)}
+.toast-b{font-size:11px;color:var(--tx2);margin-top:2px}
+@keyframes tIn{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
+@keyframes tOut{from{opacity:1}to{opacity:0;transform:translateY(4px)}}
+#tmap{height:300px;border-radius:0 0 var(--r12) var(--r12)}
+.leaflet-container{font-family:inherit}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:1.5fr minmax(0,1fr);gap:14px;margin-bottom:16px}
+.mb14{margin-bottom:14px}
+.mb16{margin-bottom:16px}
+.inv-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:#FFF8E1;border:1px solid #FFE082;color:#856404;border-radius:var(--r4);font-size:10px;font-weight:600}
+
+/* ===== TIMELINE STYLES ===== */
+.tl-page{display:flex;flex-direction:column;gap:14px}
+.tl-controls{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px 18px}
+.tl-controls-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tl-filter-group{display:flex;gap:4px;align-items:center}
+.tl-filter-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
+.tl-search{display:flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r8);padding:5px 10px;margin-left:auto}
+.tl-search input{border:none;background:transparent;font-size:11px;color:var(--tx);outline:none;width:150px}
+
+/* stats bar */
+.tl-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.tl-stat{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 14px;text-align:center}
+.tl-stat-val{font-size:20px;font-weight:800;color:var(--tx);line-height:1}
+.tl-stat-lbl{font-size:10px;color:var(--tx3);margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+
+/* main timeline */
+.tl-main{display:grid;grid-template-columns:260px 1fr;gap:0;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);overflow:hidden}
+.tl-sidebar{border-right:1px solid var(--bdr);background:var(--surf2);display:flex;flex-direction:column}
+.tl-sidebar-hd{padding:12px 14px;border-bottom:1px solid var(--bdr);font-size:11px;font-weight:700;color:var(--tx);display:flex;align-items:center;justify-content:space-between}
+.tl-user-list{overflow-y:auto;flex:1}
+.tl-user-item{display:flex;align-items:center;gap:8px;padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--bdr);transition:background .1s;border-left:3px solid transparent}
+.tl-user-item:hover{background:var(--surf3)}
+.tl-user-item.on{background:#18170F08;border-left-color:var(--tx)}
+.tl-user-item:last-child{border-bottom:none}
+.tl-user-name{font-size:12px;font-weight:600;color:var(--tx)}
+.tl-user-meta{font-size:10px;color:var(--tx3);margin-top:1px}
+.tl-user-badge{margin-left:auto;flex-shrink:0}
+
+/* event stream */
+.tl-stream{overflow-y:auto;max-height:540px;flex:1}
+.tl-day-group{border-bottom:1px solid var(--bdr)}
+.tl-day-hd{padding:8px 18px;background:var(--surf2);border-bottom:1px solid var(--bdr);font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;position:sticky;top:0;z-index:2}
+.tl-event-row{display:flex;gap:0;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .1s}
+.tl-event-row:hover{background:var(--surf2)}
+.tl-event-row.sel{background:#18170F05;box-shadow:inset 2px 0 0 var(--tx)}
+.tl-event-row:last-child{border-bottom:none}
+.tl-event-time{width:70px;flex-shrink:0;padding:12px 10px 12px 18px;font-size:10px;color:var(--tx3);font-variant-numeric:tabular-nums;line-height:1.4}
+.tl-event-time .date{font-weight:600;color:var(--tx2)}
+.tl-event-connector{width:36px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding-top:14px;position:relative}
+.tl-connector-line{position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--bdr);transform:translateX(-50%)}
+.tl-connector-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--surf);z-index:1;position:relative;flex-shrink:0}
+.tl-event-content{flex:1;padding:10px 18px 10px 4px}
+.tl-event-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tl-event-title{font-size:12px;font-weight:600;color:var(--tx)}
+.tl-event-meta{font-size:11px;color:var(--tx2);margin-top:3px}
+.tl-event-detail{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
+.tl-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:var(--r4);font-size:10px;font-weight:500;background:var(--surf2);color:var(--tx3);border:1px solid var(--bdr)}
+.tl-chip.alert{background:var(--red-l);color:var(--red);border-color:var(--red-m)}
+.tl-chip.speed{background:var(--amb-l);color:var(--amb);border-color:var(--amb-m)}
+.tl-chip.dist{background:var(--blu-l);color:var(--blu);border-color:var(--blu-m)}
+.tl-chip.normal{background:var(--grn-l);color:var(--grn);border-color:var(--grn-m)}
+
+/* event detail drawer */
+.tl-detail{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);overflow:hidden}
+.tl-detail-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px}
+.tl-detail-body{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--bdr)}
+.tl-detail-section{padding:14px 18px;border-right:1px solid var(--bdr)}
+.tl-detail-section:last-child{border-right:none}
+.tl-detail-sec-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.tl-detail-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.tl-detail-row:last-child{margin-bottom:0}
+.tl-detail-key{font-size:11px;color:var(--tx3)}
+.tl-detail-val{font-size:11px;font-weight:600;color:var(--tx);text-align:right}
+.tl-detail-actions{display:flex;gap:8px;padding:12px 18px;flex-wrap:wrap}
+
+/* mini timeline chart */
+.tl-mini-chart{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);overflow:hidden}
+</style>
+</head>
+<body>
+<div class="app" id="app" style="position:relative">
+
+<aside class="sb" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-icon">🛡</div>
+    <div>
+      <div class="sb-name">TravelGuard</div>
+      <div class="sb-ver">v2.0 · Security Platform</div>
+    </div>
+  </div>
+  <div class="sb-sec">Monitor</div>
+  <div class="sb-item on" data-page="dashboard" onclick="nav('dashboard',this)"><span class="ico">📊</span>Dashboard</div>
+  <div class="sb-item" data-page="alerts" onclick="nav('alerts',this)"><span class="ico">🚨</span>Alerts<span class="sb-badge" id="badge-alerts">0</span></div>
+  <div class="sb-item" data-page="map" onclick="nav('map',this)"><span class="ico">🗺</span>Live Map</div>
+  <div class="sb-item" data-page="timeline" onclick="nav('timeline',this)"><span class="ico">📅</span>Timeline</div>
+  <div class="sb-sec">Analyze</div>
+  <div class="sb-item" data-page="users" onclick="nav('users',this)"><span class="ico">👤</span>Users</div>
+  <div class="sb-item" data-page="investigation" onclick="nav('investigation',this)"><span class="ico">🔍</span>Investigate<span class="sb-badge amb" id="badge-inv">0</span></div>
+  <div class="sb-item" data-page="reports" onclick="nav('reports',this)"><span class="ico">📋</span>Reports</div>
+  <div class="sb-sec">Config</div>
+  <div class="sb-item" data-page="generator" onclick="nav('generator',this)"><span class="ico">⚡</span>Simulator</div>
+  <div class="sb-item" data-page="settings" onclick="nav('settings',this)"><span class="ico">⚙</span>Settings</div>
+
+  <div class="sb-footer">
+    <div class="sb-thr">
+      <div class="sb-thr-lbl">Speed Threshold</div>
+      <div class="sb-thr-val" id="thr-disp">900 <span>km/h</span></div>
+      <input type="range" min="100" max="2000" value="900" step="50" oninput="setThreshold(this.value)">
+      <div style="font-size:10px;color:var(--tx3);margin-top:2px">Drag to adjust sensitivity</div>
+    </div>
+    <div class="sb-thr" style="margin-bottom:10px">
+      <div class="sb-thr-lbl">Min Distance</div>
+      <div class="sb-thr-val" style="color:var(--amb)" id="dist-disp">50 <span>km</span></div>
+      <input type="range" min="0" max="500" value="50" step="10" oninput="setMinDist(this.value)">
+    </div>
+    <div class="status-pill">
+      <div class="pulse"></div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--grn)">System Active</div>
+        <div style="font-size:10px;color:var(--tx3)" id="last-evt">Monitoring logins</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="tb-title" id="pg-title">Security Dashboard</div>
+      <div class="tb-sub" id="pg-sub">Real-time impossible travel detection</div>
+    </div>
+    <div class="tb-right">
+      <div class="srch"><span style="font-size:13px;color:var(--tx3)">⌕</span><input type="text" placeholder="Search users, IPs, cities…" id="gsearch" oninput="onSearch(this.value)"></div>
+      <select class="btn btn-ghost" id="trng" onchange="onTimeRange(this.value)" style="cursor:pointer">
+        <option value="1h">1 hour</option>
+        <option value="6h">6 hours</option>
+        <option value="24h" selected>24 hours</option>
+        <option value="7d">7 days</option>
+      </select>
+      <button class="btn btn-dark" onclick="simulate()">+ Simulate Login</button>
+    </div>
+  </div>
+  <div class="content" id="pg"></div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+let threshold=900,minDist=50,sq='',page='dashboard';
+let events=[],alerts=[],investigations=[],whitelist=['10.0.0.1','192.168.1.1'];
+let selAlertId=null;
+let alertSortCol='ts',alertSortDir=-1;
+let alertFilter='all',alertSearchQ='';
+let gMap=null;
+window._charts={};
+
+/* Timeline state */
+let tlUserFilter='all';
+let tlTypeFilter='all';
+let tlSearch='';
+let tlSelEventId=null;
+let tlGroupBy='day';
+
+const CITIES=[
+  {n:'New York',c:'US',la:40.71,lo:-74.01},{n:'London',c:'GB',la:51.51,lo:-0.13},
+  {n:'Tokyo',c:'JP',la:35.68,lo:139.69},{n:'Paris',c:'FR',la:48.86,lo:2.35},
+  {n:'Sydney',c:'AU',la:-33.87,lo:151.21},{n:'Dubai',c:'AE',la:25.20,lo:55.27},
+  {n:'Singapore',c:'SG',la:1.35,lo:103.82},{n:'Los Angeles',c:'US',la:34.05,lo:-118.24},
+  {n:'Chicago',c:'US',la:41.88,lo:-87.63},{n:'Toronto',c:'CA',la:43.65,lo:-79.38},
+  {n:'Berlin',c:'DE',la:52.52,lo:13.41},{n:'Moscow',c:'RU',la:55.76,lo:37.62},
+  {n:'Mumbai',c:'IN',la:19.08,lo:72.88},{n:'Shanghai',c:'CN',la:31.23,lo:121.47},
+  {n:'São Paulo',c:'BR',la:-23.55,lo:-46.63},{n:'Cairo',c:'EG',la:30.04,lo:31.24},
+  {n:'Seoul',c:'KR',la:37.57,lo:126.98},{n:'Amsterdam',c:'NL',la:52.37,lo:4.90},
+  {n:'Hong Kong',c:'HK',la:22.32,lo:114.17},{n:'Madrid',c:'ES',la:40.42,lo:-3.70},
+  {n:'Istanbul',c:'TR',la:41.01,lo:28.98},{n:'Bangkok',c:'TH',la:13.76,lo:100.50},
+  {n:'Mexico City',c:'MX',la:19.43,lo:-99.13},{n:'Johannesburg',c:'ZA',la:-26.20,lo:28.05},
+  {n:'Lagos',c:'NG',la:6.52,lo:3.38},
+];
+
+const USERS=[
+  {id:'alice@corp.com',nm:'Alice Chen',color:'#7C3AED'},
+  {id:'bob@corp.com',nm:'Bob Martinez',color:'#1D4ED8'},
+  {id:'carol@corp.com',nm:'Carol White',color:'#B45309'},
+  {id:'dave@corp.com',nm:'Dave Kim',color:'#C0392B'},
+  {id:'eve@corp.com',nm:'Eve Johnson',color:'#166534'},
+  {id:'frank@corp.com',nm:'Frank Liu',color:'#D4550A'},
+  {id:'grace@corp.com',nm:'Grace Park',color:'#0891B2'},
+];
+
+function hvs(la1,lo1,la2,lo2){
+  const R=6371,d2r=Math.PI/180;
+  const dlat=(la2-la1)*d2r,dlo=(lo2-lo1)*d2r;
+  const a=Math.sin(dlat/2)**2+Math.cos(la1*d2r)*Math.cos(la2*d2r)*Math.sin(dlo/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function randIP(){return [Math.floor(Math.random()*250)+1,...Array(3).fill(0).map(()=>Math.floor(Math.random()*255))].join('.')}
+function uid8(){return Math.random().toString(36).substr(2,8)}
+function timeAgo(ts){const d=Date.now()-ts,m=Math.floor(d/6e4);return m<1?'just now':m<60?m+'m':Math.floor(m/60)+'h '+m%60+'m'}
+function fmtT(ts){return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+function fmtTLong(ts){return new Date(ts).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}
+function fmtDate(ts){return new Date(ts).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
+function fmtDateShort(ts){return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+function getUser(id){return USERS.find(u=>u.id===id)||{nm:id,color:'#888'}}
+
+function addEvent(uid,city,ip,ts=Date.now()){
+  const ev={id:'e'+uid8(),uid,city:city.n,country:city.c,lat:city.la+(Math.random()-.5)*.3,lng:city.lo+(Math.random()-.5)*.3,ip,ts,sus:false,alertId:null,device:randDevice(),browser:randBrowser()};
+  const prev=[...events].filter(e=>e.uid===uid).sort((a,b)=>b.ts-a.ts)[0];
+  if(prev){
+    const dist=hvs(prev.lat,prev.lng,ev.lat,ev.lng);
+    const hrs=(ev.ts-prev.ts)/36e5;
+    const spd=hrs>0?dist/hrs:Infinity;
+    if(dist>=minDist&&spd>threshold&&!whitelist.includes(ip)){
+      ev.sus=true;
+      ev.alertId=makeAlert(prev,ev,dist,hrs,spd).id;
+    }
+  }
+  events.push(ev);
+  document.getElementById('last-evt').textContent='Last: '+timeAgo(ts);
+  return ev;
+}
+
+function makeAlert(prev,curr,dist,hrs,spd){
+  const sev=spd>threshold*4?'critical':spd>threshold*2?'high':'medium';
+  const riskScore=Math.min(100,Math.round((spd/threshold)*35+(dist/10000)*30+(1/Math.max(hrs,.1))*5));
+  const a={id:'a'+uid8(),uid:curr.uid,prev,curr,dist:Math.round(dist),hrs:parseFloat(hrs.toFixed(2)),spd:Math.round(spd),sev,ts:curr.ts,ack:false,investigating:false,riskScore,notes:[],tags:[]};
+  alerts.unshift(a);
+  badge('badge-alerts',alerts.filter(x=>!x.ack).length);
+  return a;
+}
+
+function randDevice(){return ['MacBook Pro','Windows PC','iPhone 15','Android Phone','iPad Pro','Linux Desktop'][Math.floor(Math.random()*6)]}
+function randBrowser(){return ['Chrome 122','Firefox 123','Safari 17','Edge 122'][Math.floor(Math.random()*4)]}
+
+/* ===== INIT DATA ===== */
+function initData(){
+  const now=Date.now(),h=36e5;
+  const seed=[
+    ['alice@corp.com',0,22*h],['alice@corp.com',1,20*h],
+    ['bob@corp.com',2,18*h],['bob@corp.com',0,17.8*h],
+    ['carol@corp.com',3,16*h],['carol@corp.com',18,15.5*h],
+    ['dave@corp.com',7,14*h],['dave@corp.com',14,13.9*h],
+    ['eve@corp.com',6,12*h],['alice@corp.com',11,10*h],
+    ['frank@corp.com',5,8*h],['frank@corp.com',0,7.9*h],
+    ['grace@corp.com',16,6*h],['bob@corp.com',10,4*h],
+    ['carol@corp.com',4,3*h],['carol@corp.com',0,2.9*h],
+    ['eve@corp.com',12,2*h],['alice@corp.com',0,1*h],
+    ['dave@corp.com',21,.5*h],['frank@corp.com',8,.2*h],
+  ];
+  seed.forEach(([uid,ci,ago])=>addEvent(uid,CITIES[ci],randIP(),now-ago));
+}
+
+/* ===== NAV ===== */
+function nav(p,el){
+  page=p;
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('on'));
+  if(el)el.classList.add('on');
+  else{const found=document.querySelector(`.sb-item[data-page="${p}"]`);if(found)found.classList.add('on');}
+  const titles={
+    dashboard:['Security Dashboard','Real-time impossible travel detection & anomaly monitoring'],
+    alerts:['Alert Center','Investigate and manage suspicious login events'],
+    map:['Live Travel Map','Geographic visualization of all login events'],
+    timeline:['Event Timeline','Chronological login activity with intelligent grouping'],
+    users:['User Risk Analysis','Per-user risk profiles and login patterns'],
+    investigation:['Active Investigations','In-depth analysis of flagged accounts'],
+    reports:['Reports & Analytics','Security trends and exportable summaries'],
+    generator:['Event Simulator','Generate synthetic login events for testing'],
+    settings:['Settings','Detection parameters, whitelists, and notifications'],
+  };
+  const [t,s]=titles[p]||['Dashboard',''];
+  document.getElementById('pg-title').textContent=t;
+  document.getElementById('pg-sub').textContent=s;
+  render();
+}
+
+function badge(id,n){const el=document.getElementById(id);if(el)el.textContent=n||0}
+
+/* ===== RENDER DISPATCH ===== */
+function render(){
+  destroyCharts();
+  if(gMap){gMap.remove();gMap=null;}
+  const pg=document.getElementById('pg');
+  const map={dashboard:renderDashboard,alerts:renderAlerts,map:renderMap,timeline:renderTimeline,users:renderUsers,investigation:renderInvestigation,reports:renderReports,generator:renderGenerator,settings:renderSettings};
+  (map[page]||renderDashboard)(pg);
+}
+
+function destroyCharts(){Object.values(window._charts).forEach(c=>{try{c.destroy()}catch(e){}});window._charts={};}
+
+/* ===== DASHBOARD ===== */
+function renderDashboard(pg){
+  pg=pg||document.getElementById('pg');
+  const total=events.length,sus=events.filter(e=>e.sus).length;
+  const unack=alerts.filter(a=>!a.ack).length;
+  const avgSpd=alerts.length?Math.round(alerts.reduce((s,a)=>s+a.spd,0)/alerts.length):0;
+  const topU=topUser();
+  const detRate=total?Math.round(sus/total*100):0;
+
+  pg.innerHTML=`
+  <div class="metrics">
+    <div class="mc" onclick="nav('alerts',null)">
+      <div class="mc-lbl">🔴 Active Alerts</div>
+      <div class="mc-val" style="color:var(--red)">${unack}</div>
+      <div class="mc-sub">${alerts.length} total generated</div>
+      <div class="mc-chip chip-red">↑ Click to review</div>
+    </div>
+    <div class="mc" onclick="nav('users',null)">
+      <div class="mc-lbl">📥 Total Logins</div>
+      <div class="mc-val">${total}</div>
+      <div class="mc-sub">${events.filter(e=>e.ts>Date.now()-36e5).length} in last hour</div>
+      <div class="mc-chip chip-blu">View by user →</div>
+    </div>
+    <div class="mc" onclick="nav('timeline',null)">
+      <div class="mc-lbl">✈ Avg Required Speed</div>
+      <div class="mc-val" style="color:var(--amb)">${avgSpd.toLocaleString()}</div>
+      <div class="mc-sub">km/h · threshold ${threshold}</div>
+      <div class="mc-chip chip-amb">${detRate}% detection rate</div>
+    </div>
+    <div class="mc" onclick="topU&&nav('investigation',null)">
+      <div class="mc-lbl">⚠ Top Risk User</div>
+      <div class="mc-val" style="font-size:16px;color:var(--pur)">${topU?topU.nm.split(' ')[0]:'—'}</div>
+      <div class="mc-sub">${topU?topU.cnt+' impossible travel events':'No alerts yet'}</div>
+      <div class="mc-chip ${topU&&topU.cnt>1?'chip-red':'chip-grn'}">${topU?'Investigate →':'All clear'}</div>
+    </div>
+  </div>
+
+  <div class="g3">
+    <div class="card mb16">
+      <div class="card-hd">
+        <span class="card-hd-title">Live Activity Feed</span>
+        <span class="badge b-grn" style="font-size:9px">● LIVE</span>
+        <span class="card-hd-sub">${events.length} events</span>
+      </div>
+      <div style="display:flex;gap:4px;padding:8px 18px;border-bottom:1px solid var(--bdr)">
+        ${['all','suspicious','normal'].map(f=>`<button class="flt-btn ${feedFilter===f?'on':''}" onclick="setFeedFilter('${f}',this)">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+      </div>
+      <div id="feed" style="max-height:340px;overflow-y:auto">${renderFeed()}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-hd"><span class="card-hd-title">Severity Breakdown</span></div>
+        <div class="chart-wrap" style="height:170px"><canvas id="c-sev"></canvas></div>
+        <div style="display:flex;gap:10px;padding:0 18px 12px;flex-wrap:wrap">
+          ${[{l:'Critical',c:'#C0392B'},{l:'High',c:'#D4550A'},{l:'Medium',c:'#B45309'}].map(x=>`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2)"><span style="width:8px;height:8px;border-radius:2px;background:${x.c}"></span>${x.l}</span>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-hd-title">Logins (12h)</span></div>
+        <div class="chart-wrap" style="height:150px"><canvas id="c-hrly"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-title">Recent Alerts</span><span class="card-hd-sub" style="cursor:pointer;color:var(--blu)" onclick="nav('alerts',null)">View all →</span></div>
+      ${alerts.slice(0,4).map(a=>`
+        <div class="feed-item sus" onclick="goToAlert('${a.id}')">
+          <div class="fdot fdot-r"></div>
+          <div style="flex:1;min-width:0">
+            <div class="fi-user">${getUser(a.uid).nm}</div>
+            <div class="fi-det">${a.prev.city} → ${a.curr.city} · ${a.dist.toLocaleString()} km</div>
+            <div style="margin-top:3px"><span class="badge ${sevBadge(a.sev)}">${a.sev.toUpperCase()}</span> <span class="badge b-gray">${a.spd.toLocaleString()} km/h</span></div>
+          </div>
+          <div class="fi-time">${timeAgo(a.ts)}</div>
+        </div>`).join('')||'<div class="empty">No alerts yet</div>'}
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-title">Top Suspicious Users</span><span class="card-hd-sub" style="cursor:pointer;color:var(--blu)" onclick="nav('users',null)">Analyze →</span></div>
+      ${renderTopUsersInline()}
+    </div>
+  </div>`;
+  initDashCharts();
+}
+
+function goToAlert(id){
+  selAlertId=id;
+  nav('alerts',null);
+  setTimeout(()=>renderAlertDetail(id),100);
+}
+
+let feedFilter='all';
+function setFeedFilter(f,btn){
+  feedFilter=f;
+  document.querySelectorAll('.flt-btn').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  const fd=document.getElementById('feed');
+  if(fd)fd.innerHTML=renderFeed();
+}
+
+function renderFeed(){
+  let evs=[...events].reverse();
+  if(feedFilter==='suspicious')evs=evs.filter(e=>e.sus);
+  if(feedFilter==='normal')evs=evs.filter(e=>!e.sus);
+  if(sq)evs=evs.filter(e=>e.uid.includes(sq)||e.city.toLowerCase().includes(sq.toLowerCase())||e.ip.includes(sq));
+  if(!evs.length)return '<div class="empty">No matching events</div>';
+  return evs.slice(0,30).map(e=>{
+    const u=getUser(e.uid);
+    return `<div class="feed-item ${e.sus?'sus':'ok'}" onclick="openEventDetail('${e.id}')">
+      <div class="fdot ${e.sus?'fdot-r':'fdot-g'}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="fi-user">${u.nm}</div>
+        <div class="fi-det">${e.city}, ${e.country} · ${e.ip}</div>
+        ${e.sus?'<div style="margin-top:2px"><span class="badge b-red">ALERT</span></div>':''}
+      </div>
+      <div class="fi-time">${timeAgo(e.ts)}</div>
+    </div>`;
+  }).join('');
+}
+
+function openEventDetail(eid){
+  const ev=events.find(e=>e.id===eid);
+  if(!ev)return;
+  if(ev.alertId){goToAlert(ev.alertId);}
+  else{toast('Login Event',`${getUser(ev.uid).nm} → ${ev.city}, ${ev.country}`,'grn');}
+}
+
+function renderTopUsersInline(){
+  const us=USERS.map(u=>{
+    const cnt=alerts.filter(a=>a.uid===u.id).length;
+    return{...u,cnt};
+  }).sort((a,b)=>b.cnt-a.cnt).slice(0,5);
+  if(!us.some(u=>u.cnt>0))return '<div class="empty">No suspicious activity</div>';
+  const max=us[0].cnt||1;
+  return us.map(u=>`
+    <div class="feed-item ok" onclick="nav('users',null)" style="cursor:pointer">
+      <div class="uav" style="background:${u.color}">${u.nm.charAt(0)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="fi-user">${u.nm}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <div style="flex:1;height:4px;background:var(--surf2);border-radius:2px;overflow:hidden"><div style="height:100%;border-radius:2px;background:var(--red);width:${Math.round(u.cnt/max*100)}%"></div></div>
+          <span style="font-size:10px;color:var(--tx3);min-width:20px">${u.cnt}</span>
+        </div>
+      </div>
+      <span class="badge ${u.cnt>2?'b-red':u.cnt>0?'b-amb':'b-grn'}">${u.cnt>0?u.cnt+' alert'+(u.cnt>1?'s':''):'Clean'}</span>
+    </div>`).join('');
+}
+
+function topUser(){
+  const c={};alerts.forEach(a=>{c[a.uid]=(c[a.uid]||0)+1;});
+  const top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+  if(!top)return null;
+  const u=getUser(top[0]);return{nm:u.nm,cnt:top[1]};
+}
+
+function sevBadge(s){return s==='critical'?'b-red':s==='high'?'b-amb':'b-gray';}
+function sevColor(s){return s==='critical'?'#C0392B':s==='high'?'#D4550A':'#B45309';}
+
+function initDashCharts(){
+  setTimeout(()=>{
+    const sc=document.getElementById('c-sev');
+    const hc=document.getElementById('c-hrly');
+    if(sc){
+      const crit=alerts.filter(a=>a.sev==='critical').length||0;
+      const high=alerts.filter(a=>a.sev==='high').length||0;
+      const med=alerts.filter(a=>a.sev==='medium').length||0;
+      window._charts.sev=new Chart(sc,{type:'doughnut',data:{labels:['Critical','High','Medium'],datasets:[{data:[crit||1,high||2,med||3],backgroundColor:['#C0392B','#D4550A','#B45309'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false}}}});
+    }
+    if(hc){
+      const hrs=Array.from({length:12},(_,i)=>i);
+      const labels=hrs.map(h=>new Date(Date.now()-(12-h)*36e5).getHours()+':00');
+      const norm=hrs.map(h=>{const s=Date.now()-(12-h)*36e5,e=s+36e5;return events.filter(ev=>ev.ts>=s&&ev.ts<e&&!ev.sus).length;});
+      const susp=hrs.map(h=>{const s=Date.now()-(12-h)*36e5,e=s+36e5;return events.filter(ev=>ev.ts>=s&&ev.ts<e&&ev.sus).length;});
+      window._charts.hrly=new Chart(hc,{type:'bar',data:{labels,datasets:[{label:'Normal',data:norm,backgroundColor:'#D1FAE5',borderRadius:3,stack:'a'},{label:'Suspicious',data:susp,backgroundColor:'#FECACA',borderRadius:3,stack:'a'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{font:{size:9},color:'#9E9C96'},grid:{display:false}},y:{stacked:true,ticks:{font:{size:9},color:'#9E9C96'},grid:{color:'rgba(0,0,0,.04)'}}}}});
+    }
+  },80);
+}
+
+/* ===== ALERTS ===== */
+function renderAlerts(pg){
+  pg=pg||document.getElementById('pg');
+  const unack=alerts.filter(a=>!a.ack).length;
+  const crit=alerts.filter(a=>a.sev==='critical'&&!a.ack).length;
+
+  pg.innerHTML=`
+  <div class="metrics" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+    <div class="mc"><div class="mc-lbl">🔴 Total Alerts</div><div class="mc-val">${alerts.length}</div><div class="mc-sub">${unack} unacknowledged</div></div>
+    <div class="mc"><div class="mc-lbl" style="color:var(--red)">🚨 Critical</div><div class="mc-val" style="color:var(--red)">${alerts.filter(a=>a.sev==='critical').length}</div><div class="mc-sub">${crit} open</div></div>
+    <div class="mc"><div class="mc-lbl" style="color:var(--ora)">⚠ High</div><div class="mc-val" style="color:var(--ora)">${alerts.filter(a=>a.sev==='high').length}</div><div class="mc-sub">${alerts.filter(a=>a.sev==='high'&&!a.ack).length} open</div></div>
+    <div class="mc"><div class="mc-lbl" style="color:var(--amb)">📋 Medium</div><div class="mc-val" style="color:var(--amb)">${alerts.filter(a=>a.sev==='medium').length}</div><div class="mc-sub">${alerts.filter(a=>a.sev==='medium'&&!a.ack).length} open</div></div>
+    <div class="mc"><div class="mc-lbl" style="color:var(--grn)">✓ Acknowledged</div><div class="mc-val" style="color:var(--grn)">${alerts.filter(a=>a.ack).length}</div><div class="mc-sub">Resolved</div></div>
+  </div>
+
+  <div class="card mb16">
+    <div class="alrt-toolbar">
+      <div class="alrt-filters" id="alrt-filters">
+        ${['all','critical','high','medium','unacked','investigating'].map(f=>`<button class="flt-btn ${alertFilter===f?'on':''}" onclick="setAlertFilter('${f}',this)">${{all:'All',critical:'Critical',high:'High',medium:'Medium',unacked:'Unacknowledged',investigating:'Investigating'}[f]}</button>`).join('')}
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+        <div class="alrt-search"><span style="color:var(--tx3)">⌕</span><input placeholder="Filter alerts…" oninput="alertSearchQ=this.value;refreshAlertTable()"></div>
+        <select class="alrt-sort" onchange="alertSortCol=this.value;refreshAlertTable()">
+          <option value="ts">Sort: Time</option>
+          <option value="spd">Sort: Speed</option>
+          <option value="dist">Sort: Distance</option>
+          <option value="riskScore">Sort: Risk</option>
+        </select>
+        <button class="btn btn-sm btn-grn" onclick="ackAll()">✓ Ack All</button>
+        <button class="btn btn-sm btn-ghost" onclick="refreshAlertTable()">↺</button>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="atbl">
+        <thead>
+          <tr>
+            <th style="width:24px"></th>
+            <th onclick="sortAlerts('sev')">Severity ↕</th>
+            <th onclick="sortAlerts('uid')">User ↕</th>
+            <th onclick="sortAlerts('ts')">Time ↕</th>
+            <th>Route</th>
+            <th onclick="sortAlerts('dist')">Distance ↕</th>
+            <th onclick="sortAlerts('spd')">Req. Speed ↕</th>
+            <th onclick="sortAlerts('hrs')">Duration ↕</th>
+            <th onclick="sortAlerts('riskScore')">Risk Score ↕</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="alert-tbody">${renderAlertRows()}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="alert-detail"></div>`;
+
+  if(selAlertId)setTimeout(()=>renderAlertDetail(selAlertId),50);
+}
+
+function getFilteredAlerts(){
+  let a=[...alerts];
+  if(alertFilter==='critical')a=a.filter(x=>x.sev==='critical');
+  else if(alertFilter==='high')a=a.filter(x=>x.sev==='high');
+  else if(alertFilter==='medium')a=a.filter(x=>x.sev==='medium');
+  else if(alertFilter==='unacked')a=a.filter(x=>!x.ack);
+  else if(alertFilter==='investigating')a=a.filter(x=>x.investigating);
+  if(alertSearchQ){
+    const q=alertSearchQ.toLowerCase();
+    a=a.filter(x=>x.uid.toLowerCase().includes(q)||x.prev.city.toLowerCase().includes(q)||x.curr.city.toLowerCase().includes(q)||x.curr.ip.includes(q));
+  }
+  a.sort((x,y)=>alertSortDir*(x[alertSortCol]<y[alertSortCol]?-1:1));
+  return a;
+}
+
+function renderAlertRows(){
+  const a=getFilteredAlerts();
+  if(!a.length)return `<tr><td colspan="11"><div class="empty">No alerts match current filter</div></td></tr>`;
+  return a.map(al=>{
+    const u=getUser(al.uid);
+    const sc=sevColor(al.sev);
+    const pct=Math.min(100,Math.round(al.spd/threshold*100));
+    const risk=al.riskScore;
+    const riskColor=risk>75?'#C0392B':risk>50?'#D4550A':'#B45309';
+    return `<tr onclick="selectAlert('${al.id}')" class="${selAlertId===al.id?'sel':''}" id="arow-${al.id}">
+      <td><div class="atbl-cell" style="padding:10px 8px 10px 14px"><div class="sev-bar" style="background:${sc}"></div></div></td>
+      <td><div class="atbl-cell"><span class="badge ${sevBadge(al.sev)}">${al.sev.toUpperCase()}</span></div></td>
+      <td><div class="atbl-cell" style="gap:8px"><div class="uav uav-sm" style="background:${u.color}">${u.nm.charAt(0)}</div><div><div style="font-weight:600;color:var(--tx)">${u.nm}</div><div style="font-size:10px;color:var(--tx3)">${al.uid}</div></div></div></td>
+      <td><div class="atbl-cell"><div><div style="color:var(--tx);font-weight:500">${fmtT(al.ts)}</div><div style="font-size:10px;color:var(--tx3)">${timeAgo(al.ts)}</div></div></div></td>
+      <td><div class="atbl-cell"><div><div style="color:var(--tx)">${al.prev.city} → ${al.curr.city}</div><div style="font-size:10px;color:var(--tx3)">${al.prev.country} → ${al.curr.country}</div></div></div></td>
+      <td><div class="atbl-cell"><div style="font-weight:600;color:var(--tx)">${al.dist.toLocaleString()} <span style="font-weight:400;color:var(--tx3);font-size:11px">km</span></div></div></td>
+      <td><div class="atbl-cell"><div><div style="font-weight:700;color:${al.spd>threshold*3?'#C0392B':al.spd>threshold*1.5?'#D4550A':'#B45309'}">${al.spd.toLocaleString()} <span style="font-weight:400;font-size:11px;color:var(--tx3)">km/h</span></div><div style="width:70px;height:4px;background:var(--surf2);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${sc};border-radius:2px"></div></div></div></div></td>
+      <td><div class="atbl-cell"><div style="color:var(--tx)">${al.hrs}h</div></div></td>
+      <td><div class="atbl-cell"><div style="display:flex;align-items:center;gap:6px"><div style="width:32px;height:32px;border-radius:50%;border:3px solid ${riskColor};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${riskColor}">${risk}</div></div></div></td>
+      <td><div class="atbl-cell">${al.ack?'<span class="badge b-grn">✓ Acked</span>':al.investigating?'<div class="inv-badge">🔍 Investigating</div>':'<span class="badge b-gray">Open</span>'}</div></td>
+      <td><div class="atbl-cell" style="gap:4px">
+        ${!al.ack?`<button class="btn btn-sm btn-grn" onclick="event.stopPropagation();ackAlert('${al.id}')">✓ Ack</button>`:''}
+        <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();startInv('${al.id}')">🔍</button>
+        <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();viewOnMap('${al.id}')">🗺</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function setAlertFilter(f,btn){
+  alertFilter=f;
+  document.querySelectorAll('#alrt-filters .flt-btn').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  refreshAlertTable();
+}
+
+function sortAlerts(col){
+  if(alertSortCol===col)alertSortDir*=-1;else{alertSortCol=col;alertSortDir=-1;}
+  refreshAlertTable();
+}
+
+function refreshAlertTable(){
+  const tb=document.getElementById('alert-tbody');
+  if(tb)tb.innerHTML=renderAlertRows();
+}
+
+function selectAlert(id){
+  selAlertId=id;
+  document.querySelectorAll('.atbl tbody tr').forEach(r=>r.classList.remove('sel'));
+  const row=document.getElementById('arow-'+id);
+  if(row)row.classList.add('sel');
+  renderAlertDetail(id);
+}
+
+function renderAlertDetail(id){
+  const a=alerts.find(x=>x.id===id);
+  if(!a)return;
+  const dp=document.getElementById('alert-detail');
+  if(!dp)return;
+  const u=getUser(a.uid);
+  const sc=sevColor(a.sev);
+  const pct=Math.min(100,Math.round(a.spd/threshold*100));
+  const prevEvs=events.filter(e=>e.uid===a.uid).sort((a,b)=>a.ts-b.ts);
+
+  dp.innerHTML=`
+  <div class="card" style="margin-bottom:16px">
+    <div class="dp-header">
+      <div class="uav" style="background:${u.color}">${u.nm.charAt(0)}</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--tx)">${u.nm}</div>
+        <div style="font-size:11px;color:var(--tx3)">${a.uid} · Alert ID: <code style="font-size:10px;background:var(--surf2);padding:1px 4px;border-radius:3px">${a.id}</code></div>
+      </div>
+      <span class="badge ${sevBadge(a.sev)}" style="font-size:11px;padding:3px 10px">${a.sev.toUpperCase()}</span>
+      <div style="display:flex;align-items:center;gap:6px;margin-left:8px">
+        <div style="width:40px;height:40px;border-radius:50%;border:3px solid ${sc};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${sc}">${a.riskScore}</div>
+        <div style="font-size:10px;color:var(--tx3)">Risk<br>Score</div>
+      </div>
+      ${!a.ack?`<button class="btn btn-sm btn-grn" onclick="ackAlert('${a.id}')">✓ Acknowledge</button>`:'<span class="badge b-grn">✓ Acknowledged</span>'}
+      <button class="dp-close" onclick="selAlertId=null;document.getElementById('alert-detail').innerHTML=''">✕ Close</button>
+    </div>
+
+    <div class="dp-body">
+      <div class="dp-section">
+        <div class="dp-sec-title">📍 Location Details</div>
+        <div class="dp-row"><span class="dp-key">From</span><span class="dp-val">${a.prev.city}, ${a.prev.country}</span></div>
+        <div class="dp-row"><span class="dp-key">To</span><span class="dp-val">${a.curr.city}, ${a.curr.country}</span></div>
+        <div class="dp-row"><span class="dp-key">Distance</span><span class="dp-val">${a.dist.toLocaleString()} km</span></div>
+        <div class="dp-row"><span class="dp-key">From coords</span><span class="dp-val">${a.prev.lat.toFixed(2)}, ${a.prev.lng.toFixed(2)}</span></div>
+        <div class="dp-row"><span class="dp-key">To coords</span><span class="dp-val">${a.curr.lat.toFixed(2)}, ${a.curr.lng.toFixed(2)}</span></div>
+      </div>
+      <div class="dp-section">
+        <div class="dp-sec-title">⏱ Time & Speed</div>
+        <div class="dp-row"><span class="dp-key">Prev login</span><span class="dp-val">${fmtT(a.prev.ts)}</span></div>
+        <div class="dp-row"><span class="dp-key">Curr login</span><span class="dp-val">${fmtT(a.curr.ts)}</span></div>
+        <div class="dp-row"><span class="dp-key">Elapsed</span><span class="dp-val">${a.hrs}h</span></div>
+        <div class="dp-row"><span class="dp-key">Req. speed</span><span class="dp-val" style="color:${sc}">${a.spd.toLocaleString()} km/h</span></div>
+        <div class="dp-row"><span class="dp-key">Threshold</span><span class="dp-val">${threshold} km/h</span></div>
+        <div class="speed-meter">
+          <div class="speed-track"><div class="speed-fill" style="width:${pct}%;background:${sc}"></div></div>
+          <div class="speed-labels"><span>0</span><span>${threshold}</span><span>${pct}%</span></div>
+        </div>
+      </div>
+      <div class="dp-section">
+        <div class="dp-sec-title">💻 Device & Network</div>
+        <div class="dp-row"><span class="dp-key">Prev IP</span><span class="dp-val" style="font-family:monospace;font-size:10px">${a.prev.ip}</span></div>
+        <div class="dp-row"><span class="dp-key">Curr IP</span><span class="dp-val" style="font-family:monospace;font-size:10px">${a.curr.ip}</span></div>
+        <div class="dp-row"><span class="dp-key">Device</span><span class="dp-val">${a.curr.device}</span></div>
+        <div class="dp-row"><span class="dp-key">Browser</span><span class="dp-val">${a.curr.browser}</span></div>
+        <div class="dp-row"><span class="dp-key">Whitelisted</span><span class="dp-val">${whitelist.includes(a.curr.ip)?'Yes':'No'}</span></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--bdr)">
+      <div class="dp-section" style="border-right:1px solid var(--bdr)">
+        <div class="dp-sec-title">📜 User Login History</div>
+        <div style="max-height:120px;overflow-y:auto">
+          ${prevEvs.slice(-5).reverse().map(e=>`
+            <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--bdr)">
+              <div style="width:5px;height:5px;border-radius:50%;background:${e.sus?'var(--red)':'var(--grn)'};flex-shrink:0"></div>
+              <span style="font-size:11px;color:var(--tx);flex:1">${e.city}, ${e.country}</span>
+              <span style="font-size:10px;color:var(--tx3)">${timeAgo(e.ts)}</span>
+              ${e.sus?'<span class="badge b-red" style="font-size:9px">ALERT</span>':''}
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="dp-section">
+        <div class="dp-sec-title">📝 Investigation Notes</div>
+        <textarea placeholder="Add investigation notes…" style="width:100%;height:80px;border:1px solid var(--bdr);border-radius:var(--r4);padding:6px;font-size:11px;font-family:inherit;resize:none;color:var(--tx);background:var(--surf2);outline:none" id="notes-${a.id}">${a.notes.join('\n')}</textarea>
+        <button class="btn btn-sm btn-dark" onclick="saveNote('${a.id}')" style="margin-top:4px">Save Note</button>
+      </div>
+    </div>
+
+    <div class="dp-actions">
+      <button class="btn btn-sm btn-ghost" onclick="viewOnMap('${a.id}')">🗺 View on Map</button>
+      <button class="btn btn-sm btn-ghost" onclick="goToTimelineForAlert('${a.id}')">📅 View in Timeline</button>
+      <button class="btn btn-sm btn-ghost" onclick="startInv('${a.id}')">🔍 ${a.investigating?'Investigating':'Start Investigation'}</button>
+      <button class="btn btn-sm btn-ghost" onclick="addToWhitelist('${a.curr.ip}')">🛡 Whitelist ${a.curr.ip}</button>
+      <button class="btn btn-sm btn-red" onclick="exportAlert('${a.id}')">⬇ Export</button>
+      <div style="margin-left:auto;font-size:11px;color:var(--tx3)">Alert generated: ${fmtTLong(a.ts)}</div>
+    </div>
+  </div>`;
+}
+
+function goToTimelineForAlert(alertId){
+  const a=alerts.find(x=>x.id===alertId);
+  if(!a)return;
+  tlUserFilter=a.uid;
+  tlTypeFilter='suspicious';
+  tlSelEventId=a.curr.id||null;
+  nav('timeline',null);
+}
+
+function ackAlert(id){
+  const a=alerts.find(x=>x.id===id);if(!a)return;
+  a.ack=true;badge('badge-alerts',alerts.filter(x=>!x.ack).length);
+  refreshAlertTable();
+  renderAlertDetail(id);
+  toast('Alert Acknowledged',`${getUser(a.uid).nm} — ${a.prev.city} → ${a.curr.city}`,'grn');
+}
+
+function ackAll(){
+  alerts.forEach(a=>a.ack=true);
+  badge('badge-alerts',0);refreshAlertTable();
+  toast('All Acknowledged','All alerts marked as acknowledged','grn');
+}
+
+function startInv(id){
+  const a=alerts.find(x=>x.id===id);if(!a)return;
+  a.investigating=true;
+  badge('badge-inv',alerts.filter(x=>x.investigating&&!x.ack).length);
+  refreshAlertTable();renderAlertDetail(id);
+  toast('Investigation Started',`${getUser(a.uid).nm} flagged for deep review`,'amb');
+}
+
+function saveNote(id){
+  const a=alerts.find(x=>x.id===id);
+  const ta=document.getElementById('notes-'+id);
+  if(a&&ta){a.notes=[ta.value];toast('Note Saved','Investigation note saved','grn');}
+}
+
+function exportAlert(id){
+  const a=alerts.find(x=>x.id===id);if(!a)return;
+  toast('Export Ready',`Alert ${id} — use real backend to download JSON`,'blu');
+}
+
+function addToWhitelist(ip){
+  if(!whitelist.includes(ip)){whitelist.push(ip);}
+  toast('IP Whitelisted',ip+' added to trusted list','grn');
+}
+
+function viewOnMap(id){
+  const a=alerts.find(x=>x.id===id);if(!a)return;
+  nav('map',null);
+  setTimeout(()=>{if(gMap)focusAlert(a);},400);
+}
+
+/* ===== MAP ===== */
+function renderMap(pg){
+  pg=pg||document.getElementById('pg');
+  pg.innerHTML=`
+  <div class="card mb16">
+    <div class="card-hd">
+      <span class="card-hd-title">Live Travel Map</span>
+      <div style="display:flex;gap:6px;margin-left:auto">
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)"><span style="width:16px;height:3px;border-radius:1px;background:var(--grn)"></span>Legitimate</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)"><span style="width:16px;height:3px;border-radius:1px;background:var(--red)"></span>Impossible</span>
+        <button class="btn btn-sm btn-ghost" onclick="if(gMap)gMap.setView([20,0],2)">Reset View</button>
+      </div>
+    </div>
+    <div id="tmap"></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-title">Suspicious Routes</span></div>
+      ${alerts.slice(0,8).map(a=>`
+        <div class="feed-item sus" onclick="focusAlert(alerts.find(x=>x.id==='${a.id}'))">
+          <div class="fdot fdot-r"></div>
+          <div style="flex:1;min-width:0">
+            <div class="fi-user">${getUser(a.uid).nm}</div>
+            <div class="fi-det">${a.prev.city} → ${a.curr.city}</div>
+          </div>
+          <span class="badge ${sevBadge(a.sev)}">${a.spd.toLocaleString()} km/h</span>
+        </div>`).join('')||'<div class="empty">No suspicious routes</div>'}
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-title">Login Regions</span></div>
+      <div style="padding:14px 18px">${getRegions().map(r=>`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--tx2);width:80px;flex-shrink:0">${r.r}</span>
+          <div style="flex:1;height:5px;background:var(--surf2);border-radius:3px;overflow:hidden"><div style="height:100%;border-radius:3px;background:var(--blu);width:${r.p}%"></div></div>
+          <span style="font-size:10px;color:var(--tx3);min-width:16px">${r.n}</span>
+        </div>`).join('')}</div>
+    </div>
+  </div>`;
+  setTimeout(initMap,100);
+}
+
+function initMap(){
+  if(gMap){gMap.remove();gMap=null;}
+  const el=document.getElementById('tmap');if(!el)return;
+  el.style.height='340px';
+  gMap=L.map('tmap',{zoomControl:true}).setView([20,0],2);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(gMap);
+  const byUser={};
+  events.forEach(e=>{if(!byUser[e.uid])byUser[e.uid]=[];byUser[e.uid].push(e);});
+  Object.values(byUser).forEach(evs=>{
+    evs.sort((a,b)=>a.ts-b.ts);
+    evs.forEach((e,i)=>{
+      const color=e.sus?'#C0392B':'#166534';
+      L.circleMarker([e.lat,e.lng],{radius:e.sus?8:5,fillColor:color,color:'#fff',weight:2,fillOpacity:.9}).addTo(gMap)
+        .bindPopup(`<b>${getUser(e.uid).nm}</b><br>${e.city}, ${e.country}<br>${e.ip}<br>${fmtT(e.ts)}${e.sus?'<br><b style="color:red">⚠ Impossible travel</b>':''}`);
+      if(i<evs.length-1){
+        const nx=evs[i+1];
+        L.polyline([[e.lat,e.lng],[nx.lat,nx.lng]],{color:nx.sus?'#C0392B':'#166534',weight:nx.sus?2.5:1.5,opacity:.7,dashArray:nx.sus?'6,4':null}).addTo(gMap);
+      }
+    });
+  });
+}
+
+function focusAlert(a){
+  if(!a||!gMap)return;
+  gMap.fitBounds([[a.prev.lat,a.prev.lng],[a.curr.lat,a.curr.lng]],{padding:[50,50]});
+  L.polyline([[a.prev.lat,a.prev.lng],[a.curr.lat,a.curr.lng]],{color:'#C0392B',weight:3,dashArray:'8,6'}).addTo(gMap)
+    .bindPopup(`<b>Impossible!</b><br>${a.prev.city} → ${a.curr.city}<br>${a.dist.toLocaleString()} km · ${a.spd.toLocaleString()} km/h`).openPopup();
+}
+
+function getRegions(){
+  const r={};events.forEach(e=>{r[e.country]=(r[e.country]||0)+1;});
+  const sorted=Object.entries(r).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max=sorted[0]?.[1]||1;
+  return sorted.map(([rg,n])=>({r:rg,n,p:Math.round(n/max*100)}));
+}
+
+/* ===== TIMELINE (COMPLETELY REBUILT) ===== */
+function getTlFiltered(){
+  let evs=[...events].sort((a,b)=>b.ts-a.ts);
+  if(tlUserFilter!=='all')evs=evs.filter(e=>e.uid===tlUserFilter);
+  if(tlTypeFilter==='suspicious')evs=evs.filter(e=>e.sus);
+  if(tlTypeFilter==='normal')evs=evs.filter(e=>!e.sus);
+  if(tlSearch){
+    const q=tlSearch.toLowerCase();
+    evs=evs.filter(e=>e.uid.includes(q)||e.city.toLowerCase().includes(q)||e.country.toLowerCase().includes(q)||e.ip.includes(q)||getUser(e.uid).nm.toLowerCase().includes(q));
+  }
+  return evs;
+}
+
+function groupByDay(evs){
+  const groups={};
+  evs.forEach(e=>{
+    const d=new Date(e.ts);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if(!groups[key])groups[key]=[];
+    groups[key].push(e);
+  });
+  return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));
+}
+
+function renderTimeline(pg){
+  pg=pg||document.getElementById('pg');
+  const allEvs=getTlFiltered();
+  const totalEvs=events.length;
+  const susEvs=events.filter(e=>e.sus).length;
+  const usersActive=new Set(allEvs.map(e=>e.uid)).size;
+  const countries=new Set(allEvs.map(e=>e.country)).size;
+  const alertCount=alerts.length;
+
+  const userStatsMap={};
+  USERS.forEach(u=>{
+    userStatsMap[u.id]={evts:events.filter(e=>e.uid===u.id).length,sus:events.filter(e=>e.uid===u.id&&e.sus).length};
+  });
+
+  pg.innerHTML=`
+  <div class="tl-page">
+
+    <!-- Stats Row -->
+    <div class="tl-stats">
+      <div class="tl-stat">
+        <div class="tl-stat-val">${totalEvs}</div>
+        <div class="tl-stat-lbl">Total Events</div>
+      </div>
+      <div class="tl-stat">
+        <div class="tl-stat-val" style="color:var(--red)">${susEvs}</div>
+        <div class="tl-stat-lbl">Suspicious</div>
+      </div>
+      <div class="tl-stat">
+        <div class="tl-stat-val" style="color:var(--grn)">${totalEvs-susEvs}</div>
+        <div class="tl-stat-lbl">Legitimate</div>
+      </div>
+      <div class="tl-stat">
+        <div class="tl-stat-val" style="color:var(--blu)">${usersActive}</div>
+        <div class="tl-stat-lbl">Active Users</div>
+      </div>
+      <div class="tl-stat">
+        <div class="tl-stat-val" style="color:var(--pur)">${countries}</div>
+        <div class="tl-stat-lbl">Countries</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="tl-controls">
+      <div class="tl-controls-row">
+        <div class="tl-filter-group">
+          <span class="tl-filter-label">Type:</span>
+          ${['all','suspicious','normal'].map(f=>`<button class="flt-btn ${tlTypeFilter===f?'on':''}" onclick="tlSetType('${f}',this)">${{all:'All',suspicious:'🔴 Suspicious',normal:'✅ Normal'}[f]}</button>`).join('')}
+        </div>
+        <div style="width:1px;background:var(--bdr);height:20px;margin:0 4px"></div>
+        <div class="tl-filter-group">
+          <span class="tl-filter-label">Group:</span>
+          ${['day','user'].map(g=>`<button class="flt-btn ${tlGroupBy===g?'on':''}" onclick="tlSetGroup('${g}',this)">${{day:'By Day',user:'By User'}[g]}</button>`).join('')}
+        </div>
+        <div class="tl-search">
+          <span style="color:var(--tx3);font-size:13px">⌕</span>
+          <input type="text" placeholder="Search events, cities, IPs…" value="${tlSearch}" oninput="tlSearch=this.value;refreshTimeline()">
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-ghost" onclick="tlSearch='';tlUserFilter='all';tlTypeFilter='all';refreshTimeline();toast('Reset','Timeline filters cleared','grn')">↺ Reset</button>
+          <button class="btn btn-sm btn-ghost" onclick="nav('generator',null)">+ Add Events</button>
+          <button class="btn btn-sm btn-blu" onclick="exportTimelineCSV()">⬇ Export CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mini activity chart -->
+    <div class="tl-mini-chart">
+      <div class="card-hd">
+        <span class="card-hd-title">Activity Heatmap (24h)</span>
+        <span class="card-hd-sub">${allEvs.length} events shown</span>
+      </div>
+      <div class="chart-wrap" style="height:100px"><canvas id="tl-chart"></canvas></div>
+    </div>
+
+    <!-- Main 2-column layout -->
+    <div class="tl-main">
+      <!-- Left: user list -->
+      <div class="tl-sidebar">
+        <div class="tl-sidebar-hd">
+          <span>Users</span>
+          <button class="btn btn-sm btn-ghost" style="padding:2px 6px;font-size:10px" onclick="tlUserFilter='all';refreshTimeline()">All</button>
+        </div>
+        <div class="tl-user-list">
+          ${USERS.map(u=>{
+            const st=userStatsMap[u.id]||{evts:0,sus:0};
+            return `<div class="tl-user-item ${tlUserFilter===u.id?'on':''}" onclick="tlSetUser('${u.id}')">
+              <div class="uav uav-sm" style="background:${u.color}">${u.nm.charAt(0)}</div>
+              <div style="flex:1;min-width:0">
+                <div class="tl-user-name">${u.nm}</div>
+                <div class="tl-user-meta">${st.evts} logins · ${st.sus} alerts</div>
+              </div>
+              <div class="tl-user-badge">
+                ${st.sus>0?`<span class="badge b-red">${st.sus}</span>`:`<span class="badge b-grn">✓</span>`}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Right: event stream -->
+      <div class="tl-stream" id="tl-stream">
+        ${renderTlStream(allEvs)}
+      </div>
+    </div>
+
+    <!-- Event detail drawer -->
+    <div id="tl-detail-wrap"></div>
+
+  </div>`;
+
+  initTlChart(allEvs);
+}
+
+function renderTlStream(evs){
+  if(!evs.length)return '<div class="empty" style="padding:60px"><div style="font-size:32px;margin-bottom:10px">📭</div>No events match your filters.<br><span style="font-size:11px">Try adjusting the filters above or <span style="color:var(--blu);cursor:pointer" onclick="nav(\'generator\',null)">add simulated events</span>.</span></div>';
+
+  if(tlGroupBy==='day'){
+    const groups=groupByDay(evs);
+    return groups.map(([dateKey,dayEvs])=>{
+      const dateLabel=fmtDate(new Date(dateKey).getTime()+3600000);
+      const daySus=dayEvs.filter(e=>e.sus).length;
+      return `<div class="tl-day-group">
+        <div class="tl-day-hd">
+          <span>${dateLabel}</span>
+          <span style="margin-left:8px;font-weight:400;color:var(--tx3)">${dayEvs.length} events</span>
+          ${daySus>0?`<span class="badge b-red" style="margin-left:8px">${daySus} suspicious</span>`:''}
+        </div>
+        ${dayEvs.map((e,i)=>renderTlEventRow(e,i,dayEvs)).join('')}
+      </div>`;
+    }).join('');
+  } else {
+    // group by user
+    const byUser={};
+    evs.forEach(e=>{if(!byUser[e.uid])byUser[e.uid]=[];byUser[e.uid].push(e);});
+    return Object.entries(byUser).map(([uid,uEvs])=>{
+      const u=getUser(uid);
+      const uSus=uEvs.filter(e=>e.sus).length;
+      return `<div class="tl-day-group">
+        <div class="tl-day-hd" style="display:flex;align-items:center;gap:8px">
+          <div class="uav uav-sm" style="background:${u.color}">${u.nm.charAt(0)}</div>
+          <span>${u.nm}</span>
+          <span style="font-weight:400;color:var(--tx3)">${uEvs.length} events</span>
+          ${uSus>0?`<span class="badge b-red">${uSus} suspicious</span>`:''}
+        </div>
+        ${uEvs.map((e,i)=>renderTlEventRow(e,i,uEvs)).join('')}
+      </div>`;
+    }).join('');
+  }
+}
+
+function renderTlEventRow(e,i,allInGroup){
+  const u=getUser(e.uid);
+  const isFirst=i===0;
+  const isLast=i===allInGroup.length-1;
+  const dotColor=e.sus?'var(--red)':'var(--grn)';
+  const alert=e.alertId?alerts.find(a=>a.id===e.alertId):null;
+
+  return `<div class="tl-event-row ${tlSelEventId===e.id?'sel':''}" id="tlev-${e.id}" onclick="tlSelectEvent('${e.id}')">
+    <div class="tl-event-time">
+      <div>${fmtTime(e.ts)}</div>
+      <div class="date">${fmtDateShort(e.ts)}</div>
+    </div>
+    <div class="tl-event-connector">
+      <div class="tl-connector-line"></div>
+      <div class="tl-connector-dot" style="background:${dotColor};box-shadow:0 0 0 2px ${e.sus?'#FAD5D0':'#BBF7D0'}"></div>
+    </div>
+    <div class="tl-event-content">
+      <div class="tl-event-header">
+        ${tlGroupBy!=='user'?`<div class="uav uav-sm" style="background:${u.color}">${u.nm.charAt(0)}</div>`:''}
+        <span class="tl-event-title">${tlGroupBy!=='user'?u.nm+' — ':''}${e.city}, ${e.country}</span>
+        ${e.sus?`<span class="badge b-red">⚠ ALERT</span>`:'<span class="badge b-grn">✓ OK</span>'}
+      </div>
+      <div class="tl-event-meta">${e.device} · ${e.browser} · <span style="font-family:monospace">${e.ip}</span></div>
+      <div class="tl-event-detail">
+        ${alert?`<span class="tl-chip alert">🚨 ${alert.spd.toLocaleString()} km/h required</span><span class="tl-chip dist">📍 ${alert.dist.toLocaleString()} km from ${alert.prev.city}</span><span class="tl-chip speed">${alert.hrs}h elapsed</span>`:`<span class="tl-chip normal">✅ Within threshold</span>`}
+        <span class="tl-chip">${timeAgo(e.ts)}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function tlSelectEvent(eid){
+  tlSelEventId=eid;
+  document.querySelectorAll('.tl-event-row').forEach(r=>r.classList.remove('sel'));
+  const row=document.getElementById('tlev-'+eid);
+  if(row)row.classList.add('sel');
+  renderTlDetail(eid);
+}
+
+function renderTlDetail(eid){
+  const e=events.find(x=>x.id===eid);
+  const wrap=document.getElementById('tl-detail-wrap');
+  if(!e||!wrap)return;
+  const u=getUser(e.uid);
+  const alert=e.alertId?alerts.find(a=>a.id===e.alertId):null;
+
+  wrap.innerHTML=`
+  <div class="tl-detail">
+    <div class="tl-detail-hd">
+      <div class="uav" style="background:${u.color}">${u.nm.charAt(0)}</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--tx)">${u.nm}</div>
+        <div style="font-size:11px;color:var(--tx3)">${e.uid} · Event <code style="font-size:10px;background:var(--surf2);padding:1px 4px;border-radius:3px">${e.id}</code></div>
+      </div>
+      ${e.sus?`<span class="badge b-red" style="font-size:11px;padding:3px 10px">⚠ SUSPICIOUS</span>`:`<span class="badge b-grn" style="font-size:11px;padding:3px 10px">✅ LEGITIMATE</span>`}
+      <button class="dp-close" onclick="tlSelEventId=null;document.getElementById('tl-detail-wrap').innerHTML=''">✕ Close</button>
+    </div>
+
+    <div class="tl-detail-body">
+      <div class="tl-detail-section">
+        <div class="tl-detail-sec-title">📍 Login Location</div>
+        <div class="tl-detail-row"><span class="tl-detail-key">City</span><span class="tl-detail-val">${e.city}</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Country</span><span class="tl-detail-val">${e.country}</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Coordinates</span><span class="tl-detail-val">${e.lat.toFixed(2)}, ${e.lng.toFixed(2)}</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">IP Address</span><span class="tl-detail-val" style="font-family:monospace;font-size:10px">${e.ip}</span></div>
+      </div>
+      <div class="tl-detail-section">
+        <div class="tl-detail-sec-title">⏱ Time & Device</div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Date</span><span class="tl-detail-val">${fmtDateShort(e.ts)}</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Time</span><span class="tl-detail-val">${fmtTime(e.ts)}</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Device</span><span class="tl-detail-val">${e.device}</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Browser</span><span class="tl-detail-val">${e.browser}</span></div>
+      </div>
+      <div class="tl-detail-section">
+        <div class="tl-detail-sec-title">${alert?'🚨 Alert Details':'✅ Security Status'}</div>
+        ${alert?`
+        <div class="tl-detail-row"><span class="tl-detail-key">From</span><span class="tl-detail-val">${alert.prev.city}</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Distance</span><span class="tl-detail-val">${alert.dist.toLocaleString()} km</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Req. Speed</span><span class="tl-detail-val" style="color:var(--red)">${alert.spd.toLocaleString()} km/h</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Severity</span><span class="tl-detail-val"><span class="badge ${sevBadge(alert.sev)}">${alert.sev.toUpperCase()}</span></span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Risk Score</span><span class="tl-detail-val" style="color:var(--red)">${alert.riskScore}/100</span></div>
+        `:`
+        <div class="tl-detail-row"><span class="tl-detail-key">Status</span><span class="tl-detail-val" style="color:var(--grn)">Clean login</span></div>
+        <div class="tl-detail-row"><span class="tl-detail-key">Whitelisted</span><span class="tl-detail-val">${whitelist.includes(e.ip)?'Yes':'No'}</span></div>
+        `}
+      </div>
+    </div>
+
+    <div class="tl-detail-actions">
+      ${alert?`
+        <button class="btn btn-sm btn-ghost" onclick="goToAlert('${alert.id}')">🚨 View Alert</button>
+        <button class="btn btn-sm btn-ghost" onclick="viewOnMap('${alert.id}')">🗺 View on Map</button>
+        <button class="btn btn-sm btn-ghost" onclick="startInv('${alert.id}')">🔍 Investigate</button>
+        ${!alert.ack?`<button class="btn btn-sm btn-grn" onclick="ackAlert('${alert.id}');renderTlDetail('${e.id}')">✓ Acknowledge</button>`:'<span class="badge b-grn">✓ Acknowledged</span>'}
+      `:`
+        <button class="btn btn-sm btn-ghost" onclick="addToWhitelist('${e.ip}')">🛡 Whitelist IP</button>
+        <button class="btn btn-sm btn-ghost" onclick="nav('map',null)">🗺 View on Map</button>
+      `}
+      <button class="btn btn-sm btn-ghost" onclick="tlUserFilter='${e.uid}';refreshTimeline();toast('Filtered','Showing ${getUser(e.uid).nm} only','blu')">👤 Filter to User</button>
+      <span style="margin-left:auto;font-size:11px;color:var(--tx3)">${fmtTLong(e.ts)}</span>
+    </div>
+  </div>`;
+}
+
+function refreshTimeline(){
+  const stream=document.getElementById('tl-stream');
+  if(stream){
+    const filtered=getTlFiltered();
+    stream.innerHTML=renderTlStream(filtered);
+    const countEl=document.querySelector('.tl-mini-chart .card-hd-sub');
+    if(countEl)countEl.textContent=filtered.length+' events shown';
+  }
+  // Re-select if needed
+  if(tlSelEventId){
+    document.querySelectorAll('.tl-event-row').forEach(r=>r.classList.remove('sel'));
+    const row=document.getElementById('tlev-'+tlSelEventId);
+    if(row)row.classList.add('sel');
+  }
+}
+
+function tlSetUser(uid){
+  tlUserFilter=uid;
+  document.querySelectorAll('.tl-user-item').forEach(i=>i.classList.remove('on'));
+  const el=document.querySelector(`.tl-user-item[onclick*="${uid}"]`);
+  if(el)el.classList.add('on');
+  refreshTimeline();
+}
+
+function tlSetType(f,btn){
+  tlTypeFilter=f;
+  document.querySelectorAll('.flt-btn').forEach(b=>{if(['all','suspicious','normal'].some(x=>b.getAttribute('onclick')||'').includes(b.getAttribute('onclick')))b.classList.remove('on');});
+  if(btn){document.querySelectorAll('.flt-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+  refreshTimeline();
+}
+
+function tlSetGroup(g,btn){
+  tlGroupBy=g;
+  document.querySelectorAll('.flt-btn').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  refreshTimeline();
+}
+
+function initTlChart(evs){
+  setTimeout(()=>{
+    const c=document.getElementById('tl-chart');if(!c)return;
+    const hrs=Array.from({length:24},(_,i)=>i);
+    const labels=hrs.map(h=>h+':00');
+    const norm=hrs.map(h=>{const s=Date.now()-(24-h)*36e5,e=s+36e5;return events.filter(ev=>ev.ts>=s&&ev.ts<e&&!ev.sus).length;});
+    const susp=hrs.map(h=>{const s=Date.now()-(24-h)*36e5,e=s+36e5;return events.filter(ev=>ev.ts>=s&&ev.ts<e&&ev.sus).length;});
+    window._charts.tl=new Chart(c,{type:'bar',data:{labels,datasets:[{label:'Normal',data:norm,backgroundColor:'#D1FAE5',borderRadius:2,stack:'a'},{label:'Suspicious',data:susp,backgroundColor:'#FECACA',borderRadius:2,stack:'a'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>'Hour: '+labels[i[0].dataIndex]}}},scales:{x:{stacked:true,ticks:{font:{size:9},color:'#9E9C96',maxRotation:0,autoSkip:true,maxTicksLimit:12},grid:{display:false}},y:{stacked:true,ticks:{font:{size:9},color:'#9E9C96'},grid:{color:'rgba(0,0,0,.04)'}}}}});
+  },80);
+}
+
+function exportTimelineCSV(){
+  const evs=getTlFiltered();
+  const rows=[['ID','User','Email','City','Country','IP','Device','Browser','Timestamp','Suspicious','Alert ID']];
+  evs.forEach(e=>{
+    const u=getUser(e.uid);
+    rows.push([e.id,u.nm,e.uid,e.city,e.country,e.ip,e.device,e.browser,new Date(e.ts).toISOString(),e.sus?'YES':'NO',e.alertId||'']);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='travelguard-timeline.csv';a.click();
+  toast('Export Complete',evs.length+' events exported to CSV','grn');
+}
+
+/* ===== USERS ===== */
+function renderUsers(pg){
+  pg=pg||document.getElementById('pg');
+  const stats=USERS.map(u=>{
+    const evs=events.filter(e=>e.uid===u.id);
+    const sus=evs.filter(e=>e.sus).length;
+    const alts=alerts.filter(a=>a.uid===u.id);
+    const maxSpd=alts.length?Math.max(...alts.map(a=>a.spd)):0;
+    const risk=Math.min(100,sus*25+(maxSpd>threshold*2?30:0));
+    return{...u,evts:evs.length,sus,maxSpd,risk,cities:[...new Set(evs.map(e=>e.city))]};
+  }).sort((a,b)=>b.risk-a.risk);
+
+  pg.innerHTML=`
+  <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="mc"><div class="mc-lbl">👥 Total Users</div><div class="mc-val">${USERS.length}</div></div>
+    <div class="mc"><div class="mc-lbl">🔴 High Risk</div><div class="mc-val" style="color:var(--red)">${stats.filter(u=>u.risk>60).length}</div></div>
+    <div class="mc"><div class="mc-lbl">⚠ Medium Risk</div><div class="mc-val" style="color:var(--amb)">${stats.filter(u=>u.risk>20&&u.risk<=60).length}</div></div>
+    <div class="mc"><div class="mc-lbl">✓ Low Risk</div><div class="mc-val" style="color:var(--grn)">${stats.filter(u=>u.risk<=20).length}</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-title">User Risk Profiles</span></div>
+      ${stats.map(u=>`
+        <div class="feed-item ok" style="cursor:pointer" onclick="tlUserFilter='${u.id}';tlTypeFilter='all';nav('timeline',null)">
+          <div class="uav" style="background:${u.color}">${u.nm.charAt(0)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="fi-user">${u.nm}</span>
+              <span class="badge ${u.risk>60?'b-red':u.risk>20?'b-amb':'b-grn'}">${u.risk>60?'High Risk':u.risk>20?'Medium':'Low Risk'}</span>
+            </div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:2px">${u.evts} logins · ${u.sus} alerts · ${u.cities.length} cities</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+              <div style="flex:1;height:4px;background:var(--surf2);border-radius:2px;overflow:hidden"><div style="height:100%;border-radius:2px;background:${u.risk>60?'var(--red)':u.risk>20?'var(--amb)':'var(--grn)'};width:${u.risk}%"></div></div>
+              <span style="font-size:10px;color:var(--tx3);min-width:28px">Risk ${u.risk}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+            <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();tlUserFilter='${u.id}';tlTypeFilter='all';nav('timeline',null)">📅 Timeline</button>
+            ${u.sus>0?`<button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();alertFilter='all';alertSearchQ='${u.id}';nav('alerts',null)">🚨 Alerts</button>`:''}
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-title">Login Activity by User</span></div>
+      <div class="chart-wrap" style="height:320px"><canvas id="c-users"></canvas></div>
+    </div>
+  </div>`;
+  setTimeout(()=>{
+    const uc=document.getElementById('c-users');if(!uc)return;
+    window._charts.usr=new Chart(uc,{type:'bar',data:{labels:stats.map(u=>u.nm.split(' ')[0]),datasets:[{label:'Normal',data:stats.map(u=>u.evts-u.sus),backgroundColor:'#D1FAE5',borderRadius:4},{label:'Suspicious',data:stats.map(u=>u.sus),backgroundColor:'#FECACA',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{font:{size:10},color:'#9E9C96'},grid:{color:'rgba(0,0,0,.04)'}},y:{stacked:true,ticks:{font:{size:10},color:'#9E9C96'},grid:{display:false}}}}});
+  },80);
+}
+
+/* ===== INVESTIGATION ===== */
+function renderInvestigation(pg){
+  pg=pg||document.getElementById('pg');
+  const invAlerts=alerts.filter(a=>a.investigating);
+  badge('badge-inv',invAlerts.filter(a=>!a.ack).length);
+  pg.innerHTML=`
+  <div class="metrics" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="mc"><div class="mc-lbl">🔍 Under Investigation</div><div class="mc-val" style="color:var(--pur)">${invAlerts.length}</div></div>
+    <div class="mc"><div class="mc-lbl">⏳ Pending Review</div><div class="mc-val">${invAlerts.filter(a=>!a.ack).length}</div></div>
+    <div class="mc"><div class="mc-lbl">✓ Resolved</div><div class="mc-val" style="color:var(--grn)">${invAlerts.filter(a=>a.ack).length}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-hd-title">Active Investigations</span><span class="card-hd-sub" onclick="nav('alerts',null)" style="cursor:pointer;color:var(--blu)">Go to Alerts →</span></div>
+    ${invAlerts.length?invAlerts.map(a=>{
+      const u=getUser(a.uid);
+      return`<div class="feed-item sus" onclick="goToAlert('${a.id}')">
+        <div class="uav" style="background:${u.color}">${u.nm.charAt(0)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px"><span class="fi-user">${u.nm}</span><div class="inv-badge">🔍 Investigating</div></div>
+          <div class="fi-det">${a.prev.city} → ${a.curr.city} · ${a.dist.toLocaleString()} km · ${a.spd.toLocaleString()} km/h</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px">${a.notes.join(' | ')||'No notes yet'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <span class="badge ${sevBadge(a.sev)}">${a.sev.toUpperCase()}</span>
+          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();goToTimelineForAlert('${a.id}')">📅 Timeline</button>
+        </div>
+      </div>`;
+    }).join(''):`<div class="empty"><div style="font-size:28px;margin-bottom:8px">🔍</div>No active investigations.<br>Go to Alerts → click 🔍 on any alert to start investigating.</div>`}
+  </div>`;
+}
+
+/* ===== REPORTS ===== */
+function renderReports(pg){
+  pg=pg||document.getElementById('pg');
+  pg.innerHTML=`
+  <div class="metrics">
+    <div class="mc"><div class="mc-lbl">📊 Detection Rate</div><div class="mc-val">${events.length?Math.round(alerts.length/events.length*100):0}<span style="font-size:14px;font-weight:400;color:var(--tx3)">%</span></div></div>
+    <div class="mc"><div class="mc-lbl">✈ Max Speed Detected</div><div class="mc-val" style="font-size:18px">${alerts.length?Math.max(...alerts.map(a=>a.spd)).toLocaleString():'—'}<span style="font-size:12px;color:var(--tx3)"> km/h</span></div></div>
+    <div class="mc"><div class="mc-lbl">🌍 Countries Seen</div><div class="mc-val">${new Set(events.map(e=>e.country)).size}</div></div>
+    <div class="mc"><div class="mc-lbl">📅 Avg Alert/Day</div><div class="mc-val">${alerts.length}</div><div class="mc-sub">Today</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-title">Alert Trends (12h)</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-trend"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-hd-title">Top Routes</span></div>
+      <div style="padding:14px 18px">
+        ${alerts.slice(0,6).map(a=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);cursor:pointer" onclick="goToAlert('${a.id}')">
+            <span class="badge ${sevBadge(a.sev)}">${a.sev.slice(0,3).toUpperCase()}</span>
+            <span style="font-size:12px;color:var(--tx);flex:1">${a.prev.city} → ${a.curr.city}</span>
+            <span style="font-size:11px;color:var(--tx3)">${a.spd.toLocaleString()} km/h</span>
+          </div>`).join('')||'<div class="empty">No data</div>'}
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-hd-title">Export Options</span></div>
+    <div style="display:flex;gap:10px;padding:16px 18px">
+      <button class="btn btn-dark" onclick="exportTimelineCSV()">⬇ Export Timeline CSV</button>
+      <button class="btn btn-ghost" onclick="toast('Export','JSON export ready (simulated)','grn')">⬇ Export JSON</button>
+      <button class="btn btn-ghost" onclick="toast('Report','PDF report generated (simulated)','grn')">📄 Generate PDF</button>
+      <button class="btn btn-ghost" onclick="nav('timeline',null)">📅 View Timeline</button>
+    </div>
+  </div>`;
+  setTimeout(()=>{
+    const tc=document.getElementById('c-trend');if(!tc)return;
+    const hrs=Array.from({length:12},(_,i)=>i);
+    const labels=hrs.map(h=>new Date(Date.now()-(12-h)*36e5).getHours()+':00');
+    const data=hrs.map(h=>{const s=Date.now()-(12-h)*36e5,e=s+36e5;return alerts.filter(a=>a.ts>=s&&a.ts<e).length;});
+    window._charts.trend=new Chart(tc,{type:'line',data:{labels,datasets:[{label:'Alerts',data,borderColor:'#C0392B',backgroundColor:'#FDF2F020',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#C0392B'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},color:'#9E9C96'},grid:{display:false}},y:{ticks:{font:{size:9},color:'#9E9C96'},grid:{color:'rgba(0,0,0,.04)'}}}}});
+  },80);
+}
+
+/* ===== GENERATOR ===== */
+function renderGenerator(pg){
+  pg=pg||document.getElementById('pg');
+  pg.innerHTML=`
+  <div class="card mb16">
+    <div class="card-hd"><span class="card-hd-title">Manual Event Injection</span></div>
+    <div style="padding:14px 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">User</label>
+        <select id="g-user" class="btn btn-ghost" style="width:160px">${USERS.map(u=>`<option value="${u.id}">${u.nm}</option>`).join('')}</select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">City</label>
+        <select id="g-city" class="btn btn-ghost" style="width:160px">${CITIES.map(c=>`<option value="${c.n}">${c.n}, ${c.c}</option>`).join('')}</select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">IP</label>
+        <input id="g-ip" value="${randIP()}" style="padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r8);font-size:12px;width:140px;color:var(--tx);background:var(--surf);outline:none">
+      </div>
+      <button class="btn btn-dark" onclick="manualInject()">Inject Event</button>
+    </div>
+  </div>
+  <div class="card mb16">
+    <div class="card-hd"><span class="card-hd-title">Scenario Presets</span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px 18px">
+      ${[
+        {n:'🌍 Transatlantic Impossible',d:'NY → London in 30 min',fn:'sTransatlantic'},
+        {n:'🏃 City Hopping',d:'5 cities in 2 hours',fn:'sHopping'},
+        {n:'🔄 Account Takeover',d:'LA → Moscow → Bangkok',fn:'sTakeover'},
+        {n:'✅ Legitimate Trip',d:'London → Paris → Amsterdam',fn:'sLegit'},
+        {n:'👤 VPN Pattern',d:'Rapid region switching',fn:'sVPN'},
+        {n:'🌐 Mass Simulation',d:'20 random events',fn:'sMass'},
+      ].map(s=>`<div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r8);padding:14px;cursor:pointer;transition:all .12s" onmouseover="this.style.borderColor='var(--bdr2)'" onmouseout="this.style.borderColor='var(--bdr)'" onclick="${s.fn}()">
+        <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:4px">${s.n}</div>
+        <div style="font-size:11px;color:var(--tx3)">${s.d}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-hd-title">Recent Events</span>
+      <span class="card-hd-sub">${events.length} total</span>
+      <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="nav('timeline',null)">📅 View Full Timeline →</button>
+    </div>
+    <div style="max-height:240px;overflow-y:auto">
+      ${[...events].reverse().slice(0,15).map(e=>{
+        const u=getUser(e.uid);
+        return`<div class="feed-item ${e.sus?'sus':'ok'}" onclick="${e.sus?`goToAlert('${e.alertId}')`:`toast('Login','${u.nm} → ${e.city}','grn')`}">
+          <div class="fdot ${e.sus?'fdot-r':'fdot-g'}"></div>
+          <div style="flex:1;min-width:0"><div class="fi-user">${u.nm}</div><div class="fi-det">${e.city}, ${e.country} · ${e.ip}</div></div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="fi-time">${timeAgo(e.ts)}</span>
+            ${e.sus?'<span class="badge b-red">ALERT</span>':''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function manualInject(){
+  const uid=document.getElementById('g-user').value;
+  const cn=document.getElementById('g-city').value;
+  const ip=document.getElementById('g-ip').value;
+  const city=CITIES.find(c=>c.n===cn);if(!city)return;
+  const ev=addEvent(uid,city,ip);
+  document.getElementById('g-ip').value=randIP();
+  toast(ev.sus?'🚨 Alert Generated':'✅ Login Recorded',`${getUser(uid).nm} → ${city.n}`,ev.sus?'red':'grn');
+  renderGenerator(document.getElementById('pg'));
+}
+
+function sTransatlantic(){const now=Date.now();addEvent('alice@corp.com',CITIES[0],randIP(),now-1800000);addEvent('alice@corp.com',CITIES[1],randIP(),now);toast('🌍 Scenario','NY→London 30min fired','red');render();}
+function sHopping(){const now=Date.now();['Tokyo','Singapore','Dubai','London','New York'].forEach((n,i)=>{addEvent('bob@corp.com',CITIES.find(c=>c.n===n),randIP(),now-(5-i)*1200000);});toast('🏃 Scenario','5-city hop fired','amb');render();}
+function sTakeover(){const now=Date.now();addEvent('dave@corp.com',CITIES[7],randIP(),now-7200000);addEvent('dave@corp.com',CITIES[11],randIP(),now-3600000);addEvent('dave@corp.com',CITIES[21],randIP(),now);toast('🔄 Scenario','Takeover pattern fired','red');render();}
+function sLegit(){const now=Date.now();addEvent('eve@corp.com',CITIES[1],randIP(),now-86400000);addEvent('eve@corp.com',CITIES[3],randIP(),now-43200000);addEvent('eve@corp.com',CITIES[17],randIP(),now);toast('✅ Scenario','Legit EU trip — no alerts','grn');render();}
+function sVPN(){const now=Date.now();addEvent('carol@corp.com',CITIES[7],randIP(),now-3600000);addEvent('carol@corp.com',CITIES[11],randIP(),now-1800000);addEvent('carol@corp.com',CITIES[13],randIP(),now);toast('👤 Scenario','VPN pattern fired','amb');render();}
+function sMass(){for(let i=0;i<20;i++){const u=USERS[Math.floor(Math.random()*USERS.length)];addEvent(u.id,CITIES[Math.floor(Math.random()*CITIES.length)],randIP(),Date.now()-Math.random()*86400000);}toast('🌐 Mass Sim','20 random events generated','blu');render();}
+
+/* ===== SETTINGS ===== */
+function renderSettings(pg){
+  pg=pg||document.getElementById('pg');
+  pg.innerHTML=`
+  <div class="g2">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-hd"><span class="card-hd-title">🛡 IP Whitelist</span></div>
+        <div id="wl-list">
+          ${whitelist.map(ip=>`<div class="feed-item ok" style="align-items:center">
+            <span style="font-family:monospace;font-size:12px;color:var(--blu);flex:1">${ip}</span>
+            <span class="badge b-grn">Trusted</span>
+            <button class="btn btn-sm btn-red" style="margin-left:8px" onclick="rmWL('${ip}')">Remove</button>
+          </div>`).join('')}
+        </div>
+        <div style="padding:10px 18px;border-top:1px solid var(--bdr);display:flex;gap:8px">
+          <input id="wl-in" placeholder="192.168.x.x" style="flex:1;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r8);font-size:12px;outline:none;color:var(--tx);background:var(--surf)">
+          <button class="btn btn-dark" onclick="addWL()">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-hd-title">🔔 Notifications</span></div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px">
+          ${[{l:'Slack Webhook',d:'Critical alerts → Slack'},{l:'Email Alerts',d:'Daily digest to security team'},{l:'PagerDuty',d:'On-call escalation'},{l:'SMS Alerts',d:'High severity only'}].map(n=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)">
+              <div><div style="font-size:12px;font-weight:600;color:var(--tx)">${n.l}</div><div style="font-size:11px;color:var(--tx3)">${n.d}</div></div>
+              <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)"><input type="checkbox" ${n.l==='Slack Webhook'?'checked':''} style="accent-color:var(--grn)"> Enable</label>
+            </div>`).join('')}
+          <button class="btn btn-sm btn-dark" onclick="toast('Test Sent','Slack test notification fired','grn')">Send Test Alert</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-hd"><span class="card-hd-title">⚙ Detection Parameters</span></div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:14px">
+          ${[
+            {l:'Speed Threshold (km/h)',v:threshold,min:100,max:2000,step:50,id:'p-spd',fn:'setThreshold'},
+            {l:'Min Distance (km)',v:minDist,min:0,max:500,step:10,id:'p-dst',fn:'setMinDist'},
+            {l:'Time Window (h)',v:24,min:1,max:168,step:1,id:'p-win',fn:''},
+            {l:'Cooldown (min)',v:30,min:5,max:120,step:5,id:'p-cool',fn:''},
+          ].map(p=>`
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:11px;color:var(--tx2);font-weight:500">${p.l}</span>
+                <span style="font-size:11px;color:var(--red);font-weight:700" id="${p.id}-v">${p.v}</span>
+              </div>
+              <input type="range" min="${p.min}" max="${p.max}" value="${p.v}" step="${p.step}" style="width:100%" oninput="document.getElementById('${p.id}-v').textContent=this.value;${p.fn?p.fn+'(this.value)':''}">
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-hd-title">📊 System Stats</span></div>
+        <div style="padding:14px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          ${[['Total Events',events.length],['Total Alerts',alerts.length],['Whitelist IPs',whitelist.length],['Active Users',USERS.length],['Detection Rate',events.length?Math.round(alerts.length/events.length*100)+'%':'0%'],['Avg Speed',alerts.length?Math.round(alerts.reduce((s,a)=>s+a.spd,0)/alerts.length).toLocaleString()+' km/h':'—']].map(([l,v])=>`
+            <div style="background:var(--surf2);border-radius:var(--r8);padding:10px 12px;border:1px solid var(--bdr)">
+              <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;font-weight:600">${l}</div>
+              <div style="font-size:20px;font-weight:800;color:var(--tx);margin-top:4px">${v}</div>
+            </div>`).join('')}
+        </div>
+        <div style="padding:0 14px 14px">
+          <button class="btn btn-red" style="width:100%" onclick="if(confirm('Clear all events and alerts?')){events=[];alerts=[];renderSettings(document.getElementById('pg'));toast('Cleared','All data reset','grn')}">🗑 Reset All Data</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function addWL(){const v=document.getElementById('wl-in').value.trim();if(v&&!whitelist.includes(v)){whitelist.push(v);toast('Whitelisted',v+' added','grn');renderSettings(document.getElementById('pg'));}}
+function rmWL(ip){whitelist=whitelist.filter(x=>x!==ip);renderSettings(document.getElementById('pg'));}
+
+/* ===== GLOBAL CONTROLS ===== */
+function setThreshold(v){threshold=+v;document.getElementById('thr-disp').innerHTML=v+' <span style="font-size:11px;font-weight:400;color:var(--tx3)">km/h</span>';}
+function setMinDist(v){minDist=+v;document.getElementById('dist-disp').innerHTML=v+' <span style="font-size:11px;font-weight:400;color:var(--tx3)">km</span>';}
+
+function simulate(){
+  const u=USERS[Math.floor(Math.random()*USERS.length)];
+  const city=CITIES[Math.floor(Math.random()*CITIES.length)];
+  const ev=addEvent(u.id,city,randIP());
+  toast(ev.sus?'🚨 Alert!':'✅ Login',`${u.nm} → ${city.n}`,ev.sus?'red':'grn');
+  if(page==='dashboard')renderDashboard();
+  else if(page==='alerts'){refreshAlertTable();badge('badge-alerts',alerts.filter(x=>!x.ack).length);}
+  else if(page==='timeline'){refreshTimeline();}
+}
+
+function onSearch(q){sq=q;if(page==='dashboard'){const fd=document.getElementById('feed');if(fd)fd.innerHTML=renderFeed();}}
+function onTimeRange(){toast('Filter','Time range updated','blu');}
+
+/* ===== TOAST ===== */
+function toast(title,body,type='grn'){
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className='toast';
+  t.style.borderLeft=`3px solid ${type==='red'?'var(--red)':type==='amb'?'var(--amb)':type==='blu'?'var(--blu)':'var(--grn)'}`;
+  t.innerHTML=`<div class="toast-t">${title}</div><div class="toast-b">${body}</div>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.animation='tOut .25s ease forwards';setTimeout(()=>t.remove(),250);},3200);
+}
+
+/* ===== AUTO REFRESH ===== */
+setInterval(()=>{
+  if(Math.random()<0.25){
+    const u=USERS[Math.floor(Math.random()*USERS.length)];
+    const city=CITIES[Math.floor(Math.random()*CITIES.length)];
+    const ev=addEvent(u.id,city,randIP());
+    if(ev.sus){toast('🚨 Real-time Alert',`${u.nm} flagged — ${ev.city}`,'red');}
+    badge('badge-alerts',alerts.filter(x=>!x.ack).length);
+    badge('badge-inv',alerts.filter(x=>x.investigating&&!x.ack).length);
+    if(page==='dashboard')renderDashboard();
+    else if(page==='timeline')refreshTimeline();
+  }
+},9000);
+
+/* ===== BOOT ===== */
+initData();
+badge('badge-alerts',alerts.filter(x=>!x.ack).length);
+badge('badge-inv',0);
+renderDashboard(document.getElementById('pg'));
+</script>
+</body>
+</html>
+<script>
+// Override initData to fetch from backend
+async function loadFromBackend() {
+    console.log('Fetching data from backend...');
+    
+    // Fetch events
+    const eventsRes = await fetch('/api/events');
+    const backendEvents = await eventsRes.json();
+    
+    window.events = backendEvents.map(e => ({
+        id: e.id, uid: e.user_id, city: e.city, country: e.country,
+        lat: parseFloat(e.latitude), lng: parseFloat(e.longitude),
+        ip: e.ip_address, device: e.device || 'Unknown',
+        browser: e.browser || 'Unknown', ts: parseInt(e.timestamp),
+        sus: e.is_suspicious || false, alertId: e.alert_id
+    }));
+    
+    // Fetch alerts
+    const alertsRes = await fetch('/api/alerts');
+    const backendAlerts = await alertsRes.json();
+    
+    window.alerts = backendAlerts.map(a => ({
+        id: a.id, uid: a.user_id, sev: a.severity, dist: a.distance_km,
+        hrs: a.time_hours, spd: a.required_speed, riskScore: a.risk_score,
+        ack: a.acknowledged || false, investigating: a.investigating || false,
+        notes: a.notes ? [a.notes] : [], ts: parseInt(a.timestamp),
+        prev: { city: a.prev_city, country: a.prev_country, lat: parseFloat(a.prev_latitude), lng: parseFloat(a.prev_longitude), ip: a.prev_ip },
+        curr: { city: a.curr_city, country: a.curr_country, lat: parseFloat(a.curr_latitude), lng: parseFloat(a.curr_longitude), ip: a.curr_ip, device: a.curr_device, browser: a.curr_browser }
+    }));
+    
+    badge('badge-alerts', alerts.filter(a => !a.ack).length);
+    console.log(`Loaded ${events.length} events, ${alerts.length} alerts`);
+    
+    renderDashboard(document.getElementById('pg'));
+}
+
+// Replace initData with loadFromBackend
+window.initData = loadFromBackend;
+loadFromBackend();
+</script>

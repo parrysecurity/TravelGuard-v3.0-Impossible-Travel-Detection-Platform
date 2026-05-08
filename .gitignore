@@ -1,0 +1,36 @@
+# Environment files
+.env
+.env.local
+.env.production
+
+# Node modules
+node_modules/
+npm-debug.log
+
+# Backend
+backend/node_modules/
+backend/.env
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Backup files
+*_backup/
+*.backup
+js_backup_*/
+
+# Database
+*.sqlite
+*.db
+
+# Agent config
+agent/config.ini

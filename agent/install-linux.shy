@@ -1,0 +1,77 @@
+#!/bin/bash
+
+echo "========================================"
+echo "TravelGuard Agent Installer for Linux/Mac"
+echo "========================================"
+echo ""
+
+# Check if Python3 is installed
+if ! command -v python3 &> /dev/null; then
+    echo "Python3 is not installed!"
+    echo "Please install Python3 first"
+    exit 1
+fi
+
+# Install required packages
+echo "Installing required packages..."
+pip3 install requests
+
+# Create agent directory
+mkdir -p ~/.travelguard
+cp agent.py ~/.travelguard/
+
+# Create systemd service (Linux)
+if [ "$(uname)" == "Linux" ]; then
+    echo "Creating systemd service..."
+    cat > ~/.config/systemd/user/travelguard-agent.service << EOF
+[Unit]
+Description=TravelGuard Monitoring Agent
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 ~/.travelguard/agent.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+EOF
+
+    systemctl --user enable travelguard-agent
+    systemctl --user start travelguard-agent
+    echo "Agent started as systemd service"
+fi
+
+# Create launch agent (Mac)
+if [ "$(uname)" == "Darwin" ]; then
+    echo "Creating launch agent for macOS..."
+    cat > ~/Library/LaunchAgents/com.travelguard.agent.plist << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.travelguard.agent</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>${HOME}/.travelguard/agent.py</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>
+EOF
+
+    launchctl load ~/Library/LaunchAgents/com.travelguard.agent.plist
+    echo "Agent started as launch agent"
+fi
+
+echo ""
+echo "========================================"
+echo "Installation Complete!"
+echo "Agent is running in the background"
+echo "========================================"
