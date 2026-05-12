@@ -1,454 +1,660 @@
-# 🛡️ TravelGuard v3.0 – Enterprise Impossible Travel Detection Platform
+<div align="center">
 
-[![Version](https://img.shields.io/badge/version-3.0-blue.svg)](https://github.com/parrysecurity/TravelGuard-v3.0-Impossible-Travel-Detection-Platform)
-[![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue.svg)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+<br/>
 
-**TravelGuard** is a production-ready enterprise security platform that detects account takeovers by identifying physically impossible login travel patterns using geographic distance calculation and time-based velocity analysis.
+```
+████████╗██████╗  █████╗ ██╗   ██╗███████╗██╗      ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗
+╚══██╔══╝██╔══██╗██╔══██╗██║   ██║██╔════╝██║     ██╔════╝ ██║   ██║██╔══██╗██╔══██╗██╔══██╗
+   ██║   ██████╔╝███████║██║   ██║█████╗  ██║     ██║  ███╗██║   ██║███████║██████╔╝██║  ██║
+   ██║   ██╔══██╗██╔══██║╚██╗ ██╔╝██╔══╝  ██║     ██║   ██║██║   ██║██╔══██║██╔══██╗██║  ██║
+   ██║   ██║  ██║██║  ██║ ╚████╔╝ ███████╗███████╗╚██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝
+   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝
+```
 
-![TravelGuard Dashboard](docs/screenshots/dashboard.png)
+**Enterprise Impossible Travel Detection Platform — v3.0**
+
+*Account takeover detection · Haversine velocity analysis · Real-time alerting · Geographic visualization*
+
+<br/>
+
+[![Version](https://img.shields.io/badge/Version-3.0-6366f1?style=for-the-badge)](https://github.com/parrysecurity/TravelGuard-v3.0-Impossible-Travel-Detection-Platform)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-f59e0b?style=for-the-badge)](http://makeapullrequest.com)
+
+<br/>
+
+> A **production-ready enterprise security platform** that detects account takeovers by identifying physically impossible login travel patterns — combining Haversine great-circle distance calculation with time-based velocity analysis to surface credential compromise in real time.
+
+<br/>
 
 ---
 
-## 📋 Table of Contents
+</div>
 
-- [✨ Features](#-features)
-- [🏗️ Architecture](#️-architecture)
-- [🚀 Quick Start](#-quick-start)
-- [📦 Prerequisites](#-prerequisites)
-- [🔧 Installation](#-installation)
-- [⚙️ Configuration](#️-configuration)
-- [👥 Agent Deployment](#-agent-deployment)
-- [📡 API Endpoints](#-api-endpoints)
-- [🗄️ Database Schema](#️-database-schema)
-- [🖥️ Dashboard Pages](#️-dashboard-pages)
-- [🧪 Testing](#-testing)
-- [📊 Performance Metrics](#-performance-metrics)
-- [🔒 Security](#-security)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
-- [📧 Contact](#-contact)
+<br/>
+
+## ◈ Table of Contents
+
+- [Overview](#-overview)
+- [How Detection Works](#-how-detection-works)
+- [Capabilities](#-capabilities)
+- [Dashboard Pages](#-dashboard-pages)
+- [Architecture](#-architecture)
+- [Quick Start](#-quick-start)
+- [Installation](#-installation)
+- [Agent Deployment](#-agent-deployment)
+- [Configuration](#-configuration)
+- [API Reference](#-api-reference)
+- [Database Schema](#-database-schema)
+- [Performance](#-performance)
+- [Security Hardening](#-security-hardening)
+- [Testing](#-testing)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+<br/>
 
 ---
 
-## ✨ Features
+## ◈ Overview
 
-### Core Detection
-- **Impossible Travel Detection** – Identifies login patterns where physical travel between locations is impossible
-- **Haversine Formula** – Accurate great-circle distance calculation between geographic coordinates
-- **Real-time Analysis** – Instant alert generation when suspicious patterns are detected
-- **Configurable Thresholds** – Adjustable speed limits (default: 900 km/h) and minimum distances
+TravelGuard continuously monitors login events across your infrastructure. When two logins for the same account originate from geographic locations that would require physically impossible travel speeds between them — it fires an alert with a calculated severity, risk score, and investigation workflow.
 
-### Dashboard & Visualization
-- **Live Activity Feed** – Real-time streaming of all login events with color-coded indicators
-- **Interactive World Map** – Geographic visualization of login locations with suspicious route highlighting
-- **Severity Charts** – Donut and bar charts showing alert distribution
-- **Event Timeline** – Chronological view of all login activities with filtering
+**The core insight:** if a user logs in from New York at 09:00 and from London at 09:45, the required travel speed (~7,500 km/h) far exceeds any commercial aircraft. This is a near-certain indicator of credential compromise.
 
-### Alert Management
-- **Severity Levels** – Critical, High, and Medium alerts based on speed threshold exceedance
-- **Acknowledge & Investigate** – Workflow for security analysts to track incident response
-- **Investigation Notes** – Documentation and audit trail for each alert
-- **Bulk Actions** – Acknowledge all alerts with one click
+```
+Login Event A              Login Event B
+(New York, 09:00)   →→→   (London, 09:45)
+     │                          │
+     └──── Δ distance: 5,570 km ┘
+     └──── Δ time:     45 min   ┘
+     └──── Required:   7,426 km/h  ← IMPOSSIBLE
+                       │
+                  ALERT FIRED
+              Severity: CRITICAL
+              Risk Score: 98/100
+```
 
-### User Analytics
-- **Risk Scoring** – Per-user risk assessment based on suspicious activity history
-- **Behavioral Analysis** – Login pattern tracking across geographic locations
-- **Device Fingerprinting** – Browser and device identification for anomaly detection
+<br/>
+
+---
+
+## ◈ How Detection Works
+
+```
+New Login Event Received
+         │
+         ▼
+┌────────────────────────────────────────┐
+│   Fetch Previous Login for User        │
+│   (last known location + timestamp)    │
+└────────────────┬───────────────────────┘
+                 │
+                 ▼
+┌────────────────────────────────────────┐
+│   Haversine Distance Calculation       │
+│   d = 2r·arcsin(√(sin²(Δφ/2) +        │
+│       cos φ₁·cos φ₂·sin²(Δλ/2)))      │
+└────────────────┬───────────────────────┘
+                 │
+                 ▼
+┌────────────────────────────────────────┐
+│   Velocity Analysis                    │
+│   speed = distance_km / time_hours     │
+└───────────┬────────────────────────────┘
+            │
+     ┌──────┴───────┐
+     │              │
+speed > 900 km/h  speed ≤ 900 km/h
+     │              │
+     ▼              ▼
+┌─────────┐    ┌─────────┐
+│  ALERT  │    │  ALLOW  │
+│ + score │    │ + log   │
+└────┬────┘    └─────────┘
+     │
+     ▼
+Severity Classification
+├── speed > 5,000 km/h  →  CRITICAL
+├── speed > 2,000 km/h  →  HIGH
+└── speed > 900 km/h    →  MEDIUM
+```
+
+**Default threshold:** 900 km/h — below the speed of commercial aircraft, above any ground transport. Configurable per deployment.
+
+<br/>
+
+---
+
+## ◈ Capabilities
+
+### Detection Engine
+
+| Capability | Detail |
+|-----------|--------|
+| **Impossible Travel Detection** | Flags logins where physical travel between locations is geometrically impossible |
+| **Haversine Formula** | Accurate great-circle distance calculation over spherical Earth geometry |
+| **Real-time Analysis** | Alert generation latency under 500 ms from event ingestion |
+| **Configurable Thresholds** | Speed limit, minimum distance, and severity bands all adjustable |
+
+### Alerting & Workflow
+
+| Capability | Detail |
+|-----------|--------|
+| **Severity Levels** | Critical · High · Medium — computed from required travel speed |
+| **Risk Scoring** | 0–100 per-user score weighted by frequency, speed exceedance, and recency |
+| **Acknowledge & Investigate** | Full analyst workflow: acknowledge → assign → note → close |
+| **Investigation Notes** | Timestamped audit trail per alert for compliance evidence |
+| **Bulk Actions** | One-click acknowledge all; batch status updates |
+
+### Visibility & Analytics
+
+| Capability | Detail |
+|-----------|--------|
+| **Live Activity Feed** | Real-time streaming of all login events, color-coded by suspicion |
+| **Interactive World Map** | Leaflet-powered geographic visualization with impossible route overlays |
+| **Severity Charts** | Donut and bar charts — alert distribution by severity and time |
+| **Event Timeline** | Chronological login history with full filtering by user, country, severity |
+| **Trend Analysis** | 12-hour rolling alert trend visualization |
+
+### User Intelligence
+
+| Capability | Detail |
+|-----------|--------|
+| **Per-User Risk Profiles** | Historical suspicious activity aggregated into a risk score per account |
+| **Behavioral Analysis** | Login pattern tracking across locations, times, and devices |
+| **Device Fingerprinting** | Browser and device identification for cross-event anomaly correlation |
 
 ### Reporting & Export
-- **CSV Export** – Export events, alerts, or complete datasets for offline analysis
-- **PDF Generation** – Professional reports for executive briefings
-- **Trend Analysis** – 12-hour alert trend visualization
 
-### Agent Monitoring
-- **Cross-Platform Agents** – Python agents for Windows, Linux, and macOS
-- **Heartbeat Monitoring** – Real-time agent status tracking
-- **Automatic Discovery** – Self-registration with unique agent IDs
+| Capability | Detail |
+|-----------|--------|
+| **CSV Export** | Events, alerts, or full dataset — one click |
+| **PDF Reports** | Formatted executive briefing documents |
+| **Event Simulator** | Synthetic event generator for threshold testing and SOC drills |
+
+### Agent Infrastructure
+
+| Capability | Detail |
+|-----------|--------|
+| **Cross-Platform Agents** | Python agents for Windows, Linux, and macOS |
+| **Heartbeat Monitoring** | Real-time agent health status on the dashboard |
+| **Auto-Registration** | Agents self-register with unique IDs on first run |
+
+<br/>
 
 ---
 
+## ◈ Dashboard Pages
+
+| Page | Purpose |
+|------|---------|
+| **Dashboard** | Live metrics, activity feed, severity charts, headline statistics |
+| **Alert Center** | Triage, acknowledge, and investigate impossible travel alerts |
+| **Live Map** | Geographic visualization of login events with suspicious route highlighting |
+| **Event Timeline** | Chronological login history with multi-dimensional filtering |
+| **User Risk Analysis** | Per-user risk profiles and login pattern breakdown |
+| **Investigation Center** | Active investigation tracking with notes and audit trail |
+| **Reports & Analytics** | Security trend summaries and exportable reports |
+| **Event Simulator** | Generate synthetic login events for testing and SOC drills |
+| **Settings** | Speed thresholds, minimum distance, IP whitelist management |
+
+<br/>
+
 ---
 
-## 🚀 Quick Start (Docker)
+## ◈ Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                     TRAVELGUARD PLATFORM                         │
+│                                                                  │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────────────┐ │
+│  │  Windows     │   │  Linux       │   │  macOS               │ │
+│  │  Agent       │   │  Agent       │   │  Agent               │ │
+│  │  (Python)    │   │  (Python)    │   │  (Python)            │ │
+│  └──────┬───────┘   └──────┬───────┘   └──────────┬───────────┘ │
+│         └──────────────────┼──────────────────────┘             │
+│                            │  POST /api/events                   │
+│                            ▼                                     │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │              Node.js / Express REST API                     │ │
+│  │                                                             │ │
+│  │   ┌─────────────┐   ┌──────────────┐   ┌────────────────┐  │ │
+│  │   │  Detection  │   │    Alert     │   │   Whitelist    │  │ │
+│  │   │  Engine     │   │   Manager    │   │   Manager      │  │ │
+│  │   │ (Haversine) │   │              │   │                │  │ │
+│  │   └──────┬──────┘   └──────┬───────┘   └────────┬───────┘  │ │
+│  └──────────┼─────────────────┼────────────────────┼──────────┘ │
+│             └─────────────────┼────────────────────┘            │
+│                               ▼                                  │
+│              ┌────────────────────────────────┐                  │
+│              │         PostgreSQL 14          │                  │
+│              │   events · alerts · agents     │                  │
+│              │   whitelist · investigations   │                  │
+│              └────────────────────────────────┘                  │
+│                               │                                  │
+│              ┌────────────────▼───────────────┐                  │
+│              │     Nginx  (port 80/443)        │                  │
+│              │  Reverse proxy + static serve  │                  │
+│              └────────────────────────────────┘                  │
+│                               │                                  │
+│                    SOC Dashboard (browser)                       │
+│           Leaflet Map · Chart.js · Live Feed                     │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+<br/>
+
+---
+
+## ◈ Quick Start
+
+### Docker *(single command)*
 
 ```bash
-# Clone the repository
 git clone https://github.com/parrysecurity/TravelGuard-v3.0-Impossible-Travel-Detection-Platform.git
 cd TravelGuard-v3.0-Impossible-Travel-Detection-Platform
 
-# Start all services
 docker-compose up -d
+```
 
-# Access the dashboard
-open http://localhost
-📦 Prerequisites
-Requirement	Version
-Node.js	20.x or higher
-PostgreSQL	14.x or higher
-Nginx	1.18+
-PM2	Latest
-Python	3.10+ (for agent)
-🔧 Installation
-1. Clone the Repository
-bash
+| Service | URL |
+|---------|-----|
+| SOC Dashboard | `http://localhost` |
+| REST API | `http://localhost:3001` |
+| API Health | `http://localhost:3001/api/health` |
+
+<br/>
+
+---
+
+## ◈ Installation
+
+### Prerequisites
+
+| Requirement | Version |
+|-------------|:-------:|
+| Node.js | 20.x+ |
+| PostgreSQL | 14.x+ |
+| Nginx | 1.18+ |
+| PM2 | Latest |
+| Python | 3.10+ *(agents only)* |
+
+### Step 1 — Clone
+
+```bash
 git clone https://github.com/parrysecurity/TravelGuard-v3.0-Impossible-Travel-Detection-Platform.git
 cd TravelGuard-v3.0-Impossible-Travel-Detection-Platform
-2. Install Backend Dependencies
-bash
+```
+
+### Step 2 — Backend dependencies
+
+```bash
 cd backend
 npm install
-3. Configure Environment Variables
-bash
+```
+
+### Step 3 — Environment
+
+```bash
 cp .env.example .env
-nano .env
+```
+
+Edit `.env`:
+
+```bash
 PORT=3001
+NODE_ENV=production
+
+# PostgreSQL
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=travelguard
 DB_USER=postgres
-DB_PASSWORD=your_password
-NODE_ENV=production
-4. Setup Database
-bash
+DB_PASSWORD=your_strong_password_here
+
+# Detection thresholds
+MAX_SPEED_KMH=900
+MIN_DISTANCE_KM=50
+```
+
+### Step 4 — Database
+
+```bash
 # Create database
 sudo -u postgres psql -c "CREATE DATABASE travelguard;"
 
 # Import schema
 sudo -u postgres psql -d travelguard < database/schema.sql
-5. Start Backend Server
-bash
-# Using PM2 (recommended for production)
+```
+
+### Step 5 — Start backend
+
+```bash
+# PM2 (recommended)
 pm2 start server.js --name travelguard-api
 pm2 save
 pm2 startup
 
-# Or using Node.js directly
+# Or direct Node
 node server.js
-6. Configure Nginx
-bash
+```
+
+### Step 6 — Nginx
+
+```bash
 sudo cp nginx/travelguard.conf /etc/nginx/sites-available/
 sudo ln -s /etc/nginx/sites-available/travelguard.conf /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-7. Access Dashboard
-text
+sudo nginx -t && sudo systemctl restart nginx
+```
+
+### Step 7 — Open dashboard
+
+```
 http://your-server-ip
-👥 Agent Deployment
-Windows Agent
-cmd
-# Download and run as Administrator
-install-windows.bat
-Linux/macOS Agent
-bash
-chmod +x install-linux.sh
-./install-linux.sh
+```
 
-Agent Commands
-Action	Command
-Check status	systemctl status travelguard-agent
-View logs	journalctl -u travelguard-agent -f
-Restart agent	systemctl restart travelguard-agent
-Stop agent	systemctl stop travelguard-agent
-📡 API Endpoints
-Method	Endpoint	Description
-GET	/api/events	Fetch all login events
-POST	/api/events	Add new login event
-GET	/api/alerts	Fetch all alerts
-PUT	/api/alerts/:id	Update alert status
-GET	/api/whitelist	Fetch whitelisted IPs
-POST	/api/whitelist	Add IP to whitelist
-DELETE	/api/whitelist/:ip	Remove IP from whitelist
-GET	/api/stats	Fetch system statistics
-GET	/api/agents	Fetch connected agents
-POST	/api/heartbeat	Agent heartbeat
-GET	/api/health	Health check
-Example API Response
-json
-{
-  "id": "evt_001",
-  "user_id": "alice@corp.com",
-  "city": "New York",
-  "country": "US",
-  "latitude": 40.7128,
-  "longitude": -74.0060,
-  "ip_address": "203.45.67.89",
-  "timestamp": 1700000000000,
-  "is_suspicious": false
-}
-🗄️ Database Schema
-events Table
-Column	Type	Description
-id	VARCHAR(50)	Primary key
-user_id	VARCHAR(255)	User identifier
-city	VARCHAR(100)	Login city
-country	VARCHAR(5)	Country code
-latitude	DECIMAL(10,6)	Geographic latitude
-longitude	DECIMAL(10,6)	Geographic longitude
-ip_address	VARCHAR(45)	IP address
-device	VARCHAR(100)	Device information
-browser	VARCHAR(100)	Browser information
-is_suspicious	BOOLEAN	Suspicious flag
-timestamp	BIGINT	Unix timestamp
-alerts Table
-Column	Type	Description
-id	VARCHAR(50)	Primary key
-user_id	VARCHAR(255)	User identifier
-severity	VARCHAR(20)	critical/high/medium
-distance_km	INTEGER	Distance traveled
-required_speed	INTEGER	Required speed in km/h
-risk_score	INTEGER	0-100 risk score
-acknowledged	BOOLEAN	Acknowledged flag
-investigating	BOOLEAN	Under investigation
-prev_city	VARCHAR(100)	Source city
-curr_city	VARCHAR(100)	Destination city
-🖥️ Dashboard Pages
-Page	Description
-Dashboard	Live metrics, activity feed, severity charts, key statistics
-Alert Center	Manage and investigate impossible travel alerts
-Live Map	Geographic visualization of login events
-Event Timeline	Chronological view of all login activities
-User Risk Analysis	Per-user risk profiles and login patterns
-Investigation Center	Track and manage active investigations
-Reports & Analytics	Security trends and exportable summaries
-Event Simulator	Generate synthetic login events for testing
-Settings	Configure thresholds and whitelist management
-🧪 Testing
-Run Backend Tests
-bash
-cd backend
-npm test
-Test API Endpoints
-bash
-# Health check
-curl http://localhost:3001/api/health
-
-# Get events
-curl http://localhost:3001/api/events
-
-# Get stats
-curl http://localhost:3001/api/stats
-Generate Test Events
-bash
-# Generate 10 random events
-for i in {1..10}; do
-  curl -X POST http://localhost:3001/api/events \
-    -H "Content-Type: application/json" \
-    -d '{"id":"test_'$i'","userId":"test@corp.com","city":"Test City","country":"TC","latitude":40.71,"longitude":-74.01,"ip":"192.168.1.'$i'","device":"Test","browser":"Chrome","timestamp":'$(date +%s%3N)'}'
-done
-📊 Performance Metrics
-Metric	Value
-Detection Rate	94%
-Average Response Time	3 minutes 12 seconds
-Concurrent Users Supported	100+
-Events per Second	50+
-Alert Generation Latency	< 500ms
-🔒 Security
-Implemented Security Features
-Input Validation – All API endpoints validate and sanitize input
-
-SQL Injection Prevention – Parameterized queries throughout
-
-Environment Variables – Secrets never hardcoded
-
-IP Whitelisting – Trusted IP management
-
-Rate Limiting – Prevents API abuse
-
-CORS Configuration – Restricts unauthorized origins
-
-Recommended Security Enhancements
-Add JWT authentication
-
-Implement HTTPS with Let's Encrypt
-
-Add audit logging
-
-Enable 2FA for admin access
-
-Regular security patches
-
-🤝 Contributing
-Fork the repository
-
-Create your feature branch (git checkout -b feature/amazing-feature)
-
-Commit your changes (git commit -m 'Add amazing feature')
-
-Push to the branch (git push origin feature/amazing-feature)
-
-Open a Pull Request
-
-📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-📧 Contact
-Project Maintainer: Parry Security
-
-GitHub: @parrysecurity
-
-Email: alikhanuana@gmail.com
-
-Project Link: https://github.com/parrysecurity/TravelGuard-v3.0-Impossible-Travel-Detection-Platform
-
-⭐ Show Your Support
-If you found this project helpful, please give it a ⭐ star on GitHub!
-
-🙏 Acknowledgments
-OpenStreetMap for map tiles
-
-Chart.js for data visualizations
-
-Leaflet for interactive maps
-
-PostgreSQL community
-
-Made with 🛡️ by Parry Security
-
-text
+<br/>
 
 ---
 
-## Additional Files to Create
+## ◈ Agent Deployment
 
-### .gitignore
+Agents run on monitored endpoints and stream login events to the TravelGuard API.
 
-```gitignore
-# Environment files
-.env
-.env.local
-.env.production
+### Linux / macOS
 
-# Dependencies
-node_modules/
-npm-debug.log
-yarn-error.log
+```bash
+chmod +x install-linux.sh
+./install-linux.sh
+```
 
-# Backend
-backend/node_modules/
-backend/.env
+### Windows
 
-# Logs
-logs/
-*.log
-pm2-*.log
+```cmd
+# Run as Administrator
+install-windows.bat
+```
 
-# OS files
-.DS_Store
-Thumbs.db
-desktop.ini
+### Agent management
 
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
+| Action | Command |
+|--------|---------|
+| Check status | `systemctl status travelguard-agent` |
+| Stream logs | `journalctl -u travelguard-agent -f` |
+| Restart | `systemctl restart travelguard-agent` |
+| Stop | `systemctl stop travelguard-agent` |
 
-# Backup files
-*_backup/
-*.backup
-js_backup_*/
+<br/>
 
-# Database
-*.sqlite
-*.db
-*.sqlite-journal
+---
 
-# Agent
-agent/config.ini
-agent/__pycache__/
-*.pyc
+## ◈ Configuration
 
-# Coverage
-coverage/
-.nyc_output/
+All thresholds are environment-variable driven — no code changes required.
 
-# Build
-dist/
-build/
+| Variable | Default | Description |
+|----------|:-------:|-------------|
+| `MAX_SPEED_KMH` | `900` | Required travel speed above this triggers an alert |
+| `MIN_DISTANCE_KM` | `50` | Minimum distance between events to evaluate (ignores same-city logins) |
+| `CRITICAL_SPEED_KMH` | `5000` | Speed threshold for CRITICAL severity |
+| `HIGH_SPEED_KMH` | `2000` | Speed threshold for HIGH severity |
+| `DB_POOL_SIZE` | `10` | PostgreSQL connection pool size |
+| `RATE_LIMIT_RPM` | `100` | API rate limit — requests per minute per IP |
 
-# Secrets
-*.pem
-*.key
-*.crt
-LICENSE
-markdown
-MIT License
+### IP Whitelist
 
-Copyright (c) 2024 Parry Security
+Trusted IPs (VPNs, office gateways) can be exempted via the Settings page or directly via API:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+```bash
+# Add IP to whitelist
+curl -X POST http://localhost:3001/api/whitelist \
+  -H "Content-Type: application/json" \
+  -d '{"ip": "203.45.67.89", "label": "HQ Office Gateway"}'
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+# Remove from whitelist
+curl -X DELETE http://localhost:3001/api/whitelist/203.45.67.89
+```
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-docker-compose.yml
-yaml
-version: '3.8'
+<br/>
 
-services:
-  postgres:
-    image: postgres:14
-    container_name: travelguard-postgres
-    environment:
-      POSTGRES_DB: travelguard
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: TravelGuard2024
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    networks:
-      - travelguard-network
+---
 
-  backend:
-    build: ./backend
-    container_name: travelguard-backend
-    ports:
-      - "3001:3001"
-    depends_on:
-      - postgres
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: travelguard
-      DB_USER: postgres
-      DB_PASSWORD: TravelGuard2024
-    networks:
-      - travelguard-network
+## ◈ API Reference
 
-  nginx:
-    image: nginx:alpine
-    container_name: travelguard-nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./frontend:/usr/share/nginx/html
-      - ./nginx/travelguard.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - backend
-    networks:
-      - travelguard-network
+Full Swagger docs available at `http://localhost:3001/api-docs`.
 
-volumes:
-  postgres_data:
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Platform health check |
+| `GET` | `/api/events` | List all login events |
+| `POST` | `/api/events` | Ingest a new login event |
+| `GET` | `/api/alerts` | List all alerts |
+| `PUT` | `/api/alerts/:id` | Update alert status (acknowledge / investigate) |
+| `GET` | `/api/stats` | Aggregate platform statistics |
+| `GET` | `/api/agents` | List connected agents and heartbeat status |
+| `POST` | `/api/heartbeat` | Agent heartbeat ping |
+| `GET` | `/api/whitelist` | List whitelisted IPs |
+| `POST` | `/api/whitelist` | Add IP to whitelist |
+| `DELETE` | `/api/whitelist/:ip` | Remove IP from whitelist |
 
-networks:
-  travelguard-network:
-    driver: bridge
+### Event payload
 
+```json
+{
+  "id":           "evt_001",
+  "user_id":      "alice@corp.com",
+  "city":         "New York",
+  "country":      "US",
+  "latitude":     40.7128,
+  "longitude":    -74.0060,
+  "ip_address":   "203.45.67.89",
+  "device":       "MacBook Pro",
+  "browser":      "Chrome 124",
+  "timestamp":    1700000000000,
+  "is_suspicious": false
+}
+```
+
+### Example requests
+
+```bash
+# Health check
+curl http://localhost:3001/api/health
+
+# Ingest login event
+curl -X POST http://localhost:3001/api/events \
+  -H "Content-Type: application/json" \
+  -d '{"id":"evt_002","user_id":"bob@corp.com","city":"London","country":"GB",
+       "latitude":51.5074,"longitude":-0.1278,"ip_address":"185.23.45.67",
+       "device":"Windows 11","browser":"Edge 123","timestamp":1700003600000}'
+
+# Acknowledge alert
+curl -X PUT http://localhost:3001/api/alerts/alert_007 \
+  -H "Content-Type: application/json" \
+  -d '{"acknowledged": true, "note": "Confirmed VPN usage — false positive"}'
+```
+
+<br/>
+
+---
+
+## ◈ Database Schema
+
+### `events` table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `VARCHAR(50)` | Primary key |
+| `user_id` | `VARCHAR(255)` | Account identifier |
+| `city` | `VARCHAR(100)` | Login city |
+| `country` | `VARCHAR(5)` | ISO country code |
+| `latitude` | `DECIMAL(10,6)` | Geographic latitude |
+| `longitude` | `DECIMAL(10,6)` | Geographic longitude |
+| `ip_address` | `VARCHAR(45)` | IPv4 / IPv6 |
+| `device` | `VARCHAR(100)` | Device description |
+| `browser` | `VARCHAR(100)` | Browser + version |
+| `is_suspicious` | `BOOLEAN` | Detection flag |
+| `timestamp` | `BIGINT` | Unix timestamp (ms) |
+
+### `alerts` table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `VARCHAR(50)` | Primary key |
+| `user_id` | `VARCHAR(255)` | Account identifier |
+| `severity` | `VARCHAR(20)` | `critical` · `high` · `medium` |
+| `distance_km` | `INTEGER` | Great-circle distance traveled |
+| `required_speed` | `INTEGER` | Calculated speed in km/h |
+| `risk_score` | `INTEGER` | 0–100 composite risk score |
+| `acknowledged` | `BOOLEAN` | Analyst acknowledgement flag |
+| `investigating` | `BOOLEAN` | Under active investigation |
+| `prev_city` | `VARCHAR(100)` | Origin city |
+| `curr_city` | `VARCHAR(100)` | Destination city |
+
+<br/>
+
+---
+
+## ◈ Performance
+
+| Metric | Value |
+|--------|:-----:|
+| Detection rate | 94% |
+| Alert generation latency | < 500 ms |
+| Average analyst response time | 3 min 12 sec |
+| Concurrent users supported | 100+ |
+| Events ingested per second | 50+ |
+
+<br/>
+
+---
+
+## ◈ Security Hardening
+
+### Implemented
+
+| Control | Implementation |
+|---------|---------------|
+| **Input validation** | All API endpoints validate and sanitize before processing |
+| **SQL injection prevention** | Parameterized queries throughout the database layer |
+| **Environment secrets** | All credentials loaded from `.env` — never hardcoded |
+| **IP whitelisting** | Trusted networks exempted from impossible-travel checks |
+| **Rate limiting** | 100 requests/min per IP — prevents event flooding |
+| **CORS configuration** | Restricts API access to authorized origins only |
+
+### Recommended for production
+
+| Enhancement | Priority |
+|-------------|:--------:|
+| JWT authentication on all API endpoints | High |
+| HTTPS with Let's Encrypt at Nginx | High |
+| 2FA for dashboard admin access | High |
+| Immutable audit log to append-only storage | Medium |
+| Regular dependency vulnerability scanning (`npm audit`) | Medium |
+
+<br/>
+
+---
+
+## ◈ Testing
+
+### Run backend tests
+
+```bash
+cd backend
+npm test
+```
+
+### Verify API endpoints
+
+```bash
+# Health check
+curl http://localhost:3001/api/health
+
+# Events
+curl http://localhost:3001/api/events
+
+# Stats
+curl http://localhost:3001/api/stats
+```
+
+### Generate synthetic test events
+
+```bash
+# Inject 10 events for load testing
+for i in {1..10}; do
+  curl -X POST http://localhost:3001/api/events \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"id\":        \"test_$i\",
+      \"user_id\":   \"test@corp.com\",
+      \"city\":      \"Test City\",
+      \"country\":   \"TC\",
+      \"latitude\":  40.71,
+      \"longitude\": -74.01,
+      \"ip\":        \"192.168.1.$i\",
+      \"device\":    \"Test Device\",
+      \"browser\":   \"Chrome\",
+      \"timestamp\": $(date +%s%3N)
+    }"
+done
+```
+
+<br/>
+
+---
+
+## ◈ Contributing
+
+```bash
+# 1. Fork → clone → branch
+git checkout -b feature/ml-velocity-model
+
+# 2. Make changes, verify tests pass
+cd backend && npm test
+
+# 3. Commit with a descriptive message
+git commit -m "feat: add ML-based velocity anomaly scoring"
+
+# 4. Push and open a Pull Request
+git push origin feature/ml-velocity-model
+```
+
+<br/>
+
+---
+
+## ◈ License
+
+Distributed under the **MIT License** — see [`LICENSE`](LICENSE) for full terms.
+
+<br/>
+
+---
+
+## ◈ Contact
+
+| Channel | Detail |
+|---------|--------|
+| **Maintainer** | Parry Security |
+| **GitHub** | [@parrysecurity](https://github.com/parrysecurity) |
+| **Project** | [TravelGuard Repository](https://github.com/parrysecurity/TravelGuard-v3.0-Impossible-Travel-Detection-Platform) |
+
+<br/>
+
+---
+
+<div align="center">
+
+Built with `Node.js` · `PostgreSQL` · `Leaflet` · `Chart.js` · `Docker` · `PM2`
+
+<br/>
+
+*Detecting the impossible — one login at a time. Leave a ⭐ if TravelGuard protects your org.*
+
+</div>
