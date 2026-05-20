@@ -36,6 +36,7 @@ https://trvlguard.parrysecurity.online/
 </div>
 
 <br/>
+<img width="1672" height="941" alt="TG" src="https://github.com/user-attachments/assets/a2f43821-dc46-4e5a-bbe1-c7a053c8092a" />
 
 ## ◈ Table of Contents
 
